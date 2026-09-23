@@ -1,0 +1,21 @@
+# Python-generated files
+__pycache__/
+*.py[oc]
+build/
+dist/
+wheels/
+*.egg-info
+
+# Virtual environments
+.venv/
+.env
+.rtk
+.mcp.json
+.claude
+
+# Other
+.DS_Store
+skills-lock.json
+.agents/
+.mypy_cache/
+.vscode
