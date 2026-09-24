@@ -31,12 +31,10 @@ def create_scaffolding(target_dir: Path) -> None:
     subdirs = ["agents", "configs", "schemas", "prompts", "tools", "utils"]
 
     target_dir.mkdir(parents=True, exist_ok=True)
-    (target_dir / "__init__.py").touch(exist_ok=True)
 
     for subdir in subdirs:
         dir_path = target_dir / subdir
         dir_path.mkdir(parents=True, exist_ok=True)
-        (dir_path / "__init__.py").touch(exist_ok=True)
 
     config_data = AgentConfig(
         model_name="openai/gpt-4o-mini",
@@ -48,9 +46,11 @@ def create_scaffolding(target_dir: Path) -> None:
         retries_output=5,
         max_concurrency=1,
     )
+
     instruction_data = "Your are super agent built with icogito-cli & icogito_lib"
     config_file = target_dir / "configs" / "example_agent_config.yaml"
     prompt_file = target_dir / "prompts" / "example_instruction.md"
+
     save_agent_config(
         config_file=config_file,
         config_data=config_data
@@ -103,12 +103,10 @@ def configure():
     Interactively configure agent workflows with questionary prompts.
     """
     typer.echo("--- Dynamic Agent Configuration ---")
-
     agent_name = questionary.text(
         "Enter agent name:",
         default="research_agent"
     ).ask()
-
     model_name = questionary.select(
         "Select OpenRouter model:",
         choices=[
@@ -117,21 +115,18 @@ def configure():
             "google/gemini-2.0-flash-001"
         ]
     ).ask()
-
-    model_providers = questionary.select(
+    model_providers = questionary.checkbox(
         "Select OpenRouter Providers:",
         choices=[
             "OpenAI", 
             "Anthropic"
         ]
     ).ask()
-
     # Boolean toggle using questionary.confirm
     enable_multi_agent = questionary.confirm(
         "Enable multi-agent configuration?",
         default=True
     ).ask()
-
     selected_subagents = []
     if enable_multi_agent:
         # Multi-select menu using questionary.checkbox
@@ -143,7 +138,6 @@ def configure():
                 "fact_checker"
             ]
         ).ask()
-
     # Multi-select menu for tools
     selected_tools = questionary.checkbox(
         "Select tools to enable for the agent:",
@@ -154,38 +148,44 @@ def configure():
         ],
         default="web_search"
     ).ask()
-
     # Boolean toggle for provider fallback
     allow_fallbacks = questionary.confirm(
         "Allow model provider fallbacks?",
         default=False
     ).ask()
-
     if agent_name is None:
         typer.echo("Configuration cancelled.")
         return
-
+    # Summary
     typer.echo("\n--- Selected Agent Configuration ---")
     typer.echo(f"Agent Name: {agent_name}")
     typer.echo(f"Model Name: {model_name}")
+    typer.echo(f"Model Providers: {model_providers}")
     typer.echo(f"Multi-Agent Mode: {enable_multi_agent}")
     typer.echo(f"Subagents: {selected_subagents}")
     typer.echo(f"Tools: {selected_tools}")
     typer.echo(f"Allow Fallbacks: {allow_fallbacks}")
-
-
-
+    # Create Config and Prompts files pahts
+    target_prompts_dir = Path("prompts")
+    target_config_dir = Path("configs")
+    target_prompts_dir.mkdir(parents=True, exist_ok=True)
+    target_config_dir.mkdir(parents=True, exist_ok=True)
+    instructions_path = f"{target_config_dir}/{agent_name}_instruction.yaml"
+    config_path = f"{target_config_dir}/{agent_name}_agent.yaml"
+    # Store configuration into a AgentConfig Object and save it
     config = AgentConfig(
         model_name=model_name,
         agent_name=agent_name,
-        instructions_path="",
+        instructions_path=instructions_path,
         settings_openrouter_provider_list=model_providers,
         subagents_list=selected_subagents,
         tools_list=selected_tools
     )
-
+    save_agent_config(
+        config_file=config_path,
+        config_data=config
+    )
     typer.echo("AgentConfig initialized successfully!")
-    return config
 
 if __name__ == "__main__":
     app()
