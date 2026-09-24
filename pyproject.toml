@@ -13,6 +13,7 @@ dependencies = [
     "pydantic>=2.13.5",
     "pydantic-ai>=2.48.0",
     "pydantic-ai-harness>=0.34.0",
+    "pyyaml>=6.0.3",
     "tavily-python>=0.8.4",
     "typer>=0.27.2",
 ]
