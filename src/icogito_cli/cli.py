@@ -15,10 +15,8 @@ if str(_lib_dir) not in sys.path:
 from icogito_lib.agents.factory import AgentFactory
 from icogito_lib.tools.tavily_web_tools import web_search, web_fetch, web_crawl
 from icogito_lib.schemas.agents import AgentConfig
-from pathlib import Path
-from typing import Optional
-import typer
-import yaml
+from icogito_lib.utils.save_agent_config import save_agent_config
+from icogito_lib.utils.save_prompt_instruction import save_prompt_instruction
 
 # Initialize the Typer application
 app = typer.Typer(
@@ -30,7 +28,7 @@ app = typer.Typer(
 
 def create_scaffolding(target_dir: Path) -> None:
     """Creates directory structure and YAML config file."""
-    subdirs = ["agents", "configs", "schemas", "tools", "utils"]
+    subdirs = ["agents", "configs", "schemas", "prompts", "tools", "utils"]
 
     target_dir.mkdir(parents=True, exist_ok=True)
     (target_dir / "__init__.py").touch(exist_ok=True)
@@ -40,20 +38,27 @@ def create_scaffolding(target_dir: Path) -> None:
         dir_path.mkdir(parents=True, exist_ok=True)
         (dir_path / "__init__.py").touch(exist_ok=True)
 
-    config_data = {
-        "model_name": "openai/gpt-4o-mini",
-        "agent_name": "lead_researcher",
-        "instructions_path": "prompts/research_instruction.md",
-        "settings_openrouter_provider_list": ["azure", "openai"],
-        "tools_list": ["web_search", "web_fetch"],
-        "subagents_list": ["sub_researcher"],
-        "retries_output": 5,
-        "max_concurrency": 1,
-    }
-
+    config_data = AgentConfig(
+        model_name="openai/gpt-4o-mini",
+        agent_name="lead_researcher",
+        instructions_path="prompts/example_instruction.md",
+        settings_openrouter_provider_list=["azure", "openai"],
+        tools_list=["web_search", "web_fetch"],
+        subagents_list=["sub_researcher"],
+        retries_output=5,
+        max_concurrency=1,
+    )
+    instruction_data = "Your are super agent built with icogito-cli & icogito_lib"
     config_file = target_dir / "configs" / "example_agent_config.yaml"
-    with open(config_file, "w") as f:
-        yaml.dump(config_data, f, sort_keys=False)
+    prompt_file = target_dir / "prompts" / "example_instruction.md"
+    save_agent_config(
+        config_file=config_file,
+        config_data=config_data
+    )
+    save_prompt_instruction(
+        path=prompt_file,
+        instruction_data=instruction_data
+    )
 
 
 @app.command()
@@ -113,6 +118,14 @@ def configure():
         ]
     ).ask()
 
+    model_providers = questionary.select(
+        "Select OpenRouter Providers:",
+        choices=[
+            "OpenAI", 
+            "Anthropic"
+        ]
+    ).ask()
+
     # Boolean toggle using questionary.confirm
     enable_multi_agent = questionary.confirm(
         "Enable multi-agent configuration?",
@@ -139,7 +152,7 @@ def configure():
             "web_fetch",
             "web_crawl"
         ],
-        default=["web_search", "web_fetch"]
+        default="web_search"
     ).ask()
 
     # Boolean toggle for provider fallback
@@ -160,11 +173,13 @@ def configure():
     typer.echo(f"Tools: {selected_tools}")
     typer.echo(f"Allow Fallbacks: {allow_fallbacks}")
 
+
+
     config = AgentConfig(
         model_name=model_name,
         agent_name=agent_name,
         instructions_path="",
-        settings_openrouter_provider_list=["OpenAI", "Anthropic"],
+        settings_openrouter_provider_list=model_providers,
         subagents_list=selected_subagents,
         tools_list=selected_tools
     )
