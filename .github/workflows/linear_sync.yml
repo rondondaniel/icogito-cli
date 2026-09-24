@@ -1,0 +1,27 @@
+name: Sync GitHub Issues to Linear
+
+# Evaluated Option for Issue Sync:
+# This GitHub Action triggers on GitHub issue events and synchronizes them with the internal Linear workspace.
+# Requirements:
+# 1. `LINEAR_API_KEY`: Secret with Linear Personal Access Token / API key with write permissions to issues.
+# 2. `LINEAR_TEAM_ID`: Secret or environment variable indicating the target Linear team ID (e.g. "ICO").
+
+on:
+  issues:
+    types: [opened, edited, closed, reopened, labeled, unlabeled]
+
+jobs:
+  sync_to_linear:
+    name: Sync Issue to Linear Workspace
+    runs-on: ubuntu-latest
+    if: ${{ !github.event.issue.pull_request }}
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Sync Issue to Linear
+        uses: linear-app/issue-sync@v1
+        with:
+          linear-api-key: ${{ secrets.LINEAR_API_KEY }}
+          linear-team-id: ${{ secrets.LINEAR_TEAM_ID }}
+          github-token: ${{ secrets.GITHUB_TOKEN }}
