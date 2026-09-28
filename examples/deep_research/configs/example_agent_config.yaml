@@ -1,0 +1,19 @@
+model_name: openai/gpt-4o-mini
+agent_name: lead_researcher
+instructions_path: prompts/example_instruction.md
+settings_openrouter_provider_list:
+- azure
+- openai
+sub_instructions_path: null
+sub_descriptions_path: null
+sub_agent_description: null
+agent_instruction: null
+subagents_list:
+- sub_researcher
+tools_list:
+- web_search
+- web_fetch
+output_schema: null
+deps_type: null
+retries_output: 5
+max_concurrency: 1
