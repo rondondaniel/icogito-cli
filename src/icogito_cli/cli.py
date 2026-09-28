@@ -31,6 +31,7 @@ def create_scaffolding(target_dir: Path) -> None:
     subdirs = ["agents", "configs", "schemas", "prompts", "tools", "utils"]
 
     target_dir.mkdir(parents=True, exist_ok=True)
+    print(target_dir)
 
     for subdir in subdirs:
         dir_path = target_dir / subdir
@@ -64,7 +65,7 @@ def create_scaffolding(target_dir: Path) -> None:
 @app.command()
 def init(
     target_dir: Path = typer.Option(
-        Path("src/icogito_lib"),
+        Path("src/my_new_agent"),
         "--target-dir",
         "-t",
         help="Target destination directory for scaffolding.",
@@ -110,16 +111,17 @@ def configure():
     model_name = questionary.select(
         "Select OpenRouter model:",
         choices=[
-            "openai/gpt-4o",
-            "anthropic/claude-3.5-sonnet",
-            "google/gemini-2.0-flash-001"
+            "openai/gpt-4o-mini",
+            "openai/gpt-6-luna",
+            "openai/gpt-6-luna-pro"
         ]
     ).ask()
     model_providers = questionary.checkbox(
         "Select OpenRouter Providers:",
         choices=[
-            "OpenAI", 
-            "Anthropic"
+            "openai", 
+            "openai/flex",
+            "azure"
         ]
     ).ask()
     # Boolean toggle using questionary.confirm
@@ -170,7 +172,7 @@ def configure():
     target_config_dir = Path("configs")
     target_prompts_dir.mkdir(parents=True, exist_ok=True)
     target_config_dir.mkdir(parents=True, exist_ok=True)
-    instructions_path = f"{target_config_dir}/{agent_name}_instruction.yaml"
+    instructions_path = f"{target_prompts_dir}/{agent_name}_instruction.md"
     config_path = f"{target_config_dir}/{agent_name}_agent.yaml"
     # Store configuration into a AgentConfig Object and save it
     config = AgentConfig(
@@ -184,6 +186,10 @@ def configure():
     save_agent_config(
         config_file=config_path,
         config_data=config
+    )
+    save_prompt_instruction(
+        path=instructions_path,
+        instruction_data=f"You are {agent_name}, built with icogito-cli & icogito_lib"
     )
     typer.echo("AgentConfig initialized successfully!")
 

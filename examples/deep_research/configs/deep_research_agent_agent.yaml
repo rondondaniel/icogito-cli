@@ -1,0 +1,16 @@
+model_name: openai/gpt-6-luna
+agent_name: deep_research_agent
+instructions_path: ../../examples/deep_research/prompts/example_instruction.md
+settings_openrouter_provider_list: []
+sub_instructions_path: null
+sub_descriptions_path: null
+sub_agent_description: null
+agent_instruction: null
+subagents_list: []
+tools_list:
+- web_search
+- web_fetch
+output_schema: null
+deps_type: null
+retries_output: 3
+max_concurrency: 1
