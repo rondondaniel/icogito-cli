@@ -7,7 +7,6 @@ from typer.testing import CliRunner
 os.environ["TAVILY_API_KEY"] = "dummy-test-key"
 
 from icogito_cli.cli import app
-from icogito_lib.utils.save_agent_config import PROJECT_ROOT
 
 runner = CliRunner()
 
@@ -36,11 +35,11 @@ def test_init_command(tmp_path: Path):
     assert (target_dir / "prompts" / "example_instruction.md").exists()
 
 
-def test_configure_command_success(mocker):
+def test_configure_command_success(tmp_path: Path, monkeypatch, mocker):
+    monkeypatch.chdir(tmp_path)
     agent_name = "my_custom_agent_test_unique"
-    expected_config_file = PROJECT_ROOT / "configs" / f"{agent_name}_agent.yaml"
-    expected_prompt_dir = PROJECT_ROOT / "prompts"
-    expected_config_dir = PROJECT_ROOT / "configs"
+    expected_config_file = tmp_path / "configs" / f"{agent_name}_agent.yaml"
+    expected_prompt_file = tmp_path / "prompts" / f"{agent_name}_instruction.md"
 
     # Mock questionary prompt ask calls
     mock_text = mocker.patch("questionary.text")
@@ -67,9 +66,12 @@ def test_configure_command_success(mocker):
         assert f"Agent Name: {agent_name}" in result.stdout
         assert "AgentConfig initialized successfully!" in result.stdout
         assert expected_config_file.exists()
+        assert expected_prompt_file.exists()
     finally:
         if expected_config_file.exists():
             expected_config_file.unlink()
+        if expected_prompt_file.exists():
+            expected_prompt_file.unlink()
 
 
 def test_configure_command_cancelled(mocker):
