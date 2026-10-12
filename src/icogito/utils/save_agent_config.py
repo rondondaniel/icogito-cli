@@ -1,7 +1,7 @@
 import yaml
 from typing import Optional
 from pathlib import Path
-from icogito_lib.schemas.agents import AgentConfig
+from icogito.schemas.agents import AgentConfig
 
 def save_agent_config(config_file: Optional[str | Path], config_data: AgentConfig) -> Optional[str | Path] | None:
     """Saves a single YAML file and converts it into an AgentConfig model."""

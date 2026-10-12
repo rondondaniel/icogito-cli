@@ -1,6 +1,6 @@
 from pathlib import Path
 
-from icogito_lib.utils.save_prompt_instruction import save_prompt_instruction
+from icogito.utils.save_prompt_instruction import save_prompt_instruction
 
 
 def test_save_prompt_instruction_none_or_empty():

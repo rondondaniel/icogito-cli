@@ -6,9 +6,9 @@ from pydantic_ai.models.openrouter import OpenRouterModel, OpenRouterModelSettin
 from pydantic_ai.providers.openrouter import OpenRouterProvider
 from pydantic_ai.output import ToolOutput
 from pydantic_ai.toolsets.function import FunctionToolset
-from icogito_lib.utils.get_prompt_instruction import get_prompt_instruction
-from icogito_lib.tools.tavily_web_tools import web_fetch, web_search
-from icogito_lib.schemas.agents import AgentConfig
+from icogito.utils.get_prompt_instruction import get_prompt_instruction
+from icogito.tools.tavily_web_tools import web_fetch, web_search
+from icogito.schemas.agents import AgentConfig
 from typing import Callable, Any
 from loguru import logger
 

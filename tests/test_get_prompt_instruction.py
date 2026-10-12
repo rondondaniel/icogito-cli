@@ -1,7 +1,7 @@
 import pytest
 from pathlib import Path
-from icogito_lib.utils.get_prompt_instruction import get_prompt_instruction, PROJECT_ROOT
-from icogito_lib.utils.save_prompt_instruction import save_prompt_instruction
+from icogito.utils.get_prompt_instruction import get_prompt_instruction, PROJECT_ROOT
+from icogito.utils.save_prompt_instruction import save_prompt_instruction
 
 
 def test_get_prompt_instruction_none_or_empty():
