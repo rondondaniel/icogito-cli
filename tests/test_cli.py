@@ -38,64 +38,80 @@ def test_init_command(tmp_path: Path):
     assert (target_dir / "tools").exists()
 
 
-def test_configure_command_success(tmp_path: Path, monkeypatch, mocker):
+def _mock_questionary(mocker, text, select, checkbox, confirm):
+    """Patch questionary prompts; each arg is the ordered list of answers."""
+    for name, answers in (
+        ("text", text),
+        ("select", select),
+        ("checkbox", checkbox),
+        ("confirm", confirm),
+    ):
+        mocker.patch(f"questionary.{name}").return_value.ask.side_effect = answers
+
+
+def test_configure_command_single_agent(tmp_path: Path, monkeypatch, mocker):
     monkeypatch.chdir(tmp_path)
-    agent_name = "my_custom_agent_test_unique"
-    expected_config_file = tmp_path / "configs" / f"{agent_name}_agent.yaml"
-    expected_prompt_file = tmp_path / "prompts" / f"{agent_name}_instruction.md"
+    agent_name = "solo_agent"
 
-    # Mock questionary prompt ask calls
-    mock_text = mocker.patch("questionary.text")
-    mock_select = mocker.patch("questionary.select")
-    mock_checkbox = mocker.patch("questionary.checkbox")
-    mock_confirm = mocker.patch("questionary.confirm")
-
-    mock_text.return_value.ask.return_value = [
-        "2",
-        agent_name,
-        "I'm a nice agent"
-    ]
-    mock_select.return_value.ask.return_value = [
-        "Yes",
-        "openai/gpt-4o"
-    ]
-    mock_checkbox.return_value.ask.side_effect = [
-        ["OpenAI"],  # OpenRouter Providers
-        ["web_researcher"],  # Subagents
-        ["web_search", "web_fetch"],  # Tools
-    ]
-    mock_confirm.return_value.ask.side_effect = [
-        True,  # enable multi agent
-        False,  # allow fallbacks
-    ]
-
-    try:
-        result = runner.invoke(app, ["configure"])
-        assert result.exit_code == 0
-        assert "--- Dynamic Agent Configuration ---" in result.stdout
-        assert f"Agent Name: {agent_name}" in result.stdout
-        assert "AgentConfig initialized successfully!" in result.stdout
-        assert expected_config_file.exists()
-        assert expected_prompt_file.exists()
-    finally:
-        if expected_config_file.exists():
-            expected_config_file.unlink()
-        if expected_prompt_file.exists():
-            expected_prompt_file.unlink()
-
-
-def test_configure_command_cancelled(mocker):
-    mock_text = mocker.patch("questionary.text")
-    mock_select = mocker.patch("questionary.select")
-    mock_checkbox = mocker.patch("questionary.checkbox")
-    mock_confirm = mocker.patch("questionary.confirm")
-
-    # If user cancels (agent_name is None)
-    mock_text.return_value.ask.return_value = None
-    mock_select.return_value.ask.return_value = "openai/gpt-4o"
-    mock_checkbox.return_value.ask.return_value = []
-    mock_confirm.return_value.ask.return_value = False
+    _mock_questionary(
+        mocker,
+        text=[agent_name, "I'm a nice agent", "0"],  # name, instr, subagents count
+        select=["No", "openai/gpt-4o-mini"],
+        checkbox=[["openai"], ["web_search", "web_fetch"]],
+        confirm=[False],
+    )
 
     result = runner.invoke(app, ["configure"])
     assert result.exit_code == 0
-    assert "Configuration cancelled." in result.stdout
+    assert "--- Dynamic Agent Configuration ---" in result.stdout
+    assert "AgentConfig initialized successfully!" in result.stdout
+    assert (tmp_path / "configs" / f"{agent_name}_agent.yaml").exists()
+    prompt_file = tmp_path / "prompts" / f"{agent_name}_instruction.md"
+    assert prompt_file.read_text() == "I'm a nice agent"
+
+
+def test_configure_command_multi_agent_with_subagent(
+    tmp_path: Path, monkeypatch, mocker
+):
+    monkeypatch.chdir(tmp_path)
+
+    _mock_questionary(
+        mocker,
+        # roots count, root name, root instr, subagents count, sub name, sub instr
+        text=["1", "root_agent", "root instr", "1", "sub_agent", "sub instr"],
+        select=["Yes", "openai/gpt-4o-mini", "openai/gpt-6-luna"],
+        checkbox=[
+            ["openai"], ["web_search"],  # root providers, tools
+            ["azure"], ["web_fetch"],  # sub providers, tools
+        ],
+        confirm=[False, True],
+    )
+
+    result = runner.invoke(app, ["configure"])
+    assert result.exit_code == 0
+    assert "AgentConfig initialized successfully!" in result.stdout
+    for name in ("root_agent", "sub_agent"):
+        assert (tmp_path / "configs" / f"{name}_agent.yaml").exists()
+        assert (tmp_path / "prompts" / f"{name}_instruction.md").exists()
+
+    root_yaml = (tmp_path / "configs" / "root_agent_agent.yaml").read_text()
+    assert "sub_agent" in root_yaml
+
+
+def test_configure_command_multiple_root_agents(tmp_path: Path, monkeypatch, mocker):
+    monkeypatch.chdir(tmp_path)
+
+    _mock_questionary(
+        mocker,
+        # roots count, then (name, instr, subagents count) per root
+        text=["2", "root_a", "instr a", "0", "root_b", "instr b", "0"],
+        select=["Yes", "openai/gpt-4o-mini", "openai/gpt-4o-mini"],
+        checkbox=[["openai"], ["web_search"], ["openai"], ["web_crawl"]],
+        confirm=[False, False],
+    )
+
+    result = runner.invoke(app, ["configure"])
+    assert result.exit_code == 0
+    for name in ("root_a", "root_b"):
+        assert (tmp_path / "configs" / f"{name}_agent.yaml").exists()
+        assert (tmp_path / "prompts" / f"{name}_instruction.md").exists()
