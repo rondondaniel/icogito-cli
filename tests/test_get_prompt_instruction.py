@@ -1,6 +1,7 @@
 import pytest
 from pathlib import Path
 from icogito_lib.utils.get_prompt_instruction import get_prompt_instruction, PROJECT_ROOT
+from icogito_lib.utils.save_prompt_instruction import save_prompt_instruction
 
 
 def test_get_prompt_instruction_none_or_empty():
@@ -31,3 +32,10 @@ def test_get_prompt_instruction_relative_path(tmp_path: Path, monkeypatch):
     finally:
         if rel_file.exists():
             rel_file.unlink()
+
+
+def test_get_prompt_instruction_reads_saved_prompt(tmp_path: Path):
+    prompt_file = tmp_path / "my_agent_instruction.md"
+    save_prompt_instruction(prompt_file, "You are an AI agent built with icogito")
+
+    assert get_prompt_instruction(prompt_file) == "You are an AI agent built with icogito"

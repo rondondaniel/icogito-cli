@@ -38,3 +38,14 @@ def test_save_prompt_instruction_missing_parent_dir_raises(tmp_path: Path, monke
         assert False, "expected FileNotFoundError"
     except FileNotFoundError:
         pass
+
+
+def test_save_prompt_instruction_matches_cli_layout(tmp_path: Path, monkeypatch):
+    # cli.py saves to prompts/<agent_name>_instruction.md under the cwd
+    monkeypatch.chdir(tmp_path)
+    (tmp_path / "prompts").mkdir()
+
+    result = save_prompt_instruction("prompts/my_agent_instruction.md", "You are an AI agent built with icogito")
+
+    assert result == tmp_path / "prompts" / "my_agent_instruction.md"
+    assert result.read_text() == "You are an AI agent built with icogito"
