@@ -6,6 +6,16 @@ import questionary
 from icogito import core
 from icogito.schemas.agents import AgentConfig
 
+APP_NAME = "icogito"
+
+
+def get_global_app_dir() -> Path:
+    """Returns the global OS-appropriate application directory for icogito."""
+    app_dir = Path(typer.get_app_dir(APP_NAME))
+    app_dir.mkdir(parents=True, exist_ok=True)
+    return app_dir
+
+
 app = typer.Typer(
     name="icogito-cli",
     help="A modern Python CLI framework to build Agent/Multi-Agents systems.",
@@ -15,21 +25,20 @@ app = typer.Typer(
 
 @app.command()
 def init(
-    target_dir: Path = typer.Option(
-        Path("src/my_new_agent"),
-        "--target-dir",
-        "-t",
-        help="Target destination directory for scaffolding.",
+    target_dir: Path = typer.Argument(
+        default=Path.cwd(),
+        help="Target directory for the new project",
     ),
     force: bool = typer.Option(False, "--force", "-f", help="Force re-initialization"),
 ):
     """
-    Initialize directory scaffolding and example agent configuration.
+    Initialize directory scaffolding for a new agent project.
     """
-    typer.echo(f"Initializing agent scaffolding at {target_dir}...")
+    typer.secho(f"Initializing agent scaffolding at {target_dir}...", fg=typer.colors.GREEN)
     core.create_scaffolding(target_dir)
-    typer.echo(
-        f"Successfully generated directory structure and configs/example_agent_config.yaml at {target_dir}."
+    typer.secho(
+        f"Successfully generated directory structure at {target_dir}.",
+        fg=typer.colors.GREEN,
     )
 
 
@@ -40,8 +49,10 @@ def doctor(
     """
     Check the system status.
     """
+    global_app_dir = get_global_app_dir()
     status = core.get_doctor_status(verbose=bool(verbose))
     typer.echo(f"System status: {status['status']}")
+    typer.echo(f"Global App Directory: {global_app_dir}")
     typer.echo(f"Available Tavily tools: {', '.join(status['tools_available'])}")
     typer.echo(f"AgentFactory ready: {status['agent_factory_ready']}")
 
