@@ -3,13 +3,17 @@ from pathlib import Path
 
 from icogito_lib.utils.save_agent_config import save_agent_config
 from icogito_lib.schemas.agents import AgentConfig
+from icogito_lib.utils.load_agent_config import load_agent_config
 
 
 def _make_config(agent_name: str = "test_agent") -> AgentConfig:
     return AgentConfig(
         model_name="openai/gpt-4o-mini",
         agent_name=agent_name,
-        instructions_path="prompts/test.md",
+        instructions_path=f"prompts/{agent_name}_instruction.md",
+        config_file_path=f"configs/{agent_name}_agent.yaml",
+        agent_instruction="You are a test agent.",
+        allow_fallbacks=False,
         settings_openrouter_provider_list=["openai"],
         tools_list=["web_search"],
         subagents_list=[],
@@ -33,6 +37,9 @@ def test_save_agent_config_absolute_path(tmp_path: Path):
     assert config_file.exists()
     saved = yaml.safe_load(config_file.read_text())
     assert saved["agent_name"] == "test_agent"
+    assert saved["config_file_path"] == "configs/test_agent_agent.yaml"
+    assert saved["agent_instruction"] == "You are a test agent."
+    assert saved["allow_fallbacks"] is False
 
 
 def test_save_agent_config_relative_path_resolves_against_cwd(tmp_path: Path, monkeypatch):
@@ -55,3 +62,14 @@ def test_save_agent_config_missing_parent_dir_raises(tmp_path: Path, monkeypatch
         assert False, "expected FileNotFoundError"
     except FileNotFoundError:
         pass
+
+
+def test_save_agent_config_round_trip(tmp_path: Path):
+    config = _make_config()
+    config.subagents_list = ["sub_agent"]
+    config_file = tmp_path / "agent.yaml"
+
+    save_agent_config(config_file, config)
+    loaded = load_agent_config(str(config_file))
+
+    assert loaded == config
