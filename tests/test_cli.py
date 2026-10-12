@@ -1,12 +1,12 @@
-import pytest
 import os
 from pathlib import Path
+import pytest
 from typer.testing import CliRunner
 
 # Ensure TAVILY_API_KEY is set in environment so imports in cli.py don't fail
 os.environ["TAVILY_API_KEY"] = "dummy-test-key"
 
-from icogito.cli import app
+from icogito.cli import app, prompt_agent_config
 
 runner = CliRunner()
 
@@ -38,6 +38,13 @@ def test_init_command(tmp_path: Path):
     assert (target_dir / "tools").exists()
 
 
+def test_init_command_short_option(tmp_path: Path):
+    target_dir = tmp_path / "scaffold_test_short"
+    result = runner.invoke(app, ["init", "-t", str(target_dir)])
+    assert result.exit_code == 0
+    assert (target_dir / "configs").exists()
+
+
 def _mock_questionary(mocker, text, select, checkbox, confirm):
     """Patch questionary prompts; each arg is the ordered list of answers."""
     for name, answers in (
@@ -47,6 +54,27 @@ def _mock_questionary(mocker, text, select, checkbox, confirm):
         ("confirm", confirm),
     ):
         mocker.patch(f"questionary.{name}").return_value.ask.side_effect = answers
+
+
+def test_prompt_agent_config_direct(mocker, tmp_path: Path, monkeypatch):
+    monkeypatch.chdir(tmp_path)
+    _mock_questionary(
+        mocker,
+        text=["test_interactive_agent", "Direct test instructions", "0"],
+        select=["openai/gpt-4o-mini"],
+        checkbox=[["openai"], ["web_search"]],
+        confirm=[True],
+    )
+
+    config = prompt_agent_config("test-agent")
+
+    assert config.agent_name == "test_interactive_agent"
+    assert config.model_name == "openai/gpt-4o-mini"
+    assert config.settings_openrouter_provider_list == ["openai"]
+    assert config.allow_fallbacks is True
+    assert config.agent_instruction == "Direct test instructions"
+    assert config.tools_list == ["web_search"]
+    assert config.subagents_list == []
 
 
 def test_configure_command_single_agent(tmp_path: Path, monkeypatch, mocker):
