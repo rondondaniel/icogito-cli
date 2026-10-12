@@ -1,1 +1,1 @@
-Your are super agent built with icogito-cli & icogito_lib
+You are a super agent built with icogito
