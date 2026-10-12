@@ -37,31 +37,6 @@ def create_scaffolding(target_dir: Path) -> None:
         dir_path = target_dir / subdir
         dir_path.mkdir(parents=True, exist_ok=True)
 
-    config_data = AgentConfig(
-        model_name="openai/gpt-4o-mini",
-        agent_name="lead_researcher",
-        instructions_path="prompts/example_instruction.md",
-        settings_openrouter_provider_list=["azure", "openai"],
-        tools_list=["web_search", "web_fetch"],
-        subagents_list=["sub_researcher"],
-        retries_output=5,
-        max_concurrency=1,
-    )
-
-    instruction_data = "Your are super agent built with icogito-cli & icogito_lib"
-    config_file = target_dir / "configs" / "example_agent_config.yaml"
-    prompt_file = target_dir / "prompts" / "example_instruction.md"
-
-    save_agent_config(
-        config_file=config_file,
-        config_data=config_data
-    )
-    save_prompt_instruction(
-        path=prompt_file,
-        instruction_data=instruction_data
-    )
-
-
 @app.command()
 def init(
     target_dir: Path = typer.Option(
@@ -98,14 +73,9 @@ def doctor(
     if verbose:
         typer.echo("Detailed logs: All services reporting nominal operations.")
 
-@app.command()
-def configure():
-    """
-    Interactively configure agent workflows with questionary prompts.
-    """
-    typer.echo("--- Dynamic Agent Configuration ---")
+def agent_config(agent: str, is_sub_agent: bool = False):
     agent_name = questionary.text(
-        "Enter agent name:",
+        f"Enter agent name for {agent}:",
         default="research_agent"
     ).ask()
     model_name = questionary.select(
@@ -124,23 +94,14 @@ def configure():
             "azure"
         ]
     ).ask()
-    # Boolean toggle using questionary.confirm
-    enable_multi_agent = questionary.confirm(
-        "Enable multi-agent configuration?",
-        default=True
+    allow_fallbacks = questionary.confirm(
+        "Allow model provider fallbacks?",
+        default=False
     ).ask()
-    selected_subagents = []
-    if enable_multi_agent:
-        # Multi-select menu using questionary.checkbox
-        selected_subagents = questionary.checkbox(
-            "Select subagents to include in workflow:",
-            choices=[
-                "web_researcher",
-                "content_summarizer",
-                "fact_checker"
-            ]
-        ).ask()
-    # Multi-select menu for tools
+    agent_instruction = questionary.text(
+        f"Enter agent's instructions:",
+        default="You are an AI agent built with icogito"
+    ).ask()
     selected_tools = questionary.checkbox(
         "Select tools to enable for the agent:",
         choices=[
@@ -150,23 +111,22 @@ def configure():
         ],
         default="web_search"
     ).ask()
-    # Boolean toggle for provider fallback
-    allow_fallbacks = questionary.confirm(
-        "Allow model provider fallbacks?",
-        default=False
-    ).ask()
-    if agent_name is None:
-        typer.echo("Configuration cancelled.")
-        return
-    # Summary
-    typer.echo("\n--- Selected Agent Configuration ---")
-    typer.echo(f"Agent Name: {agent_name}")
-    typer.echo(f"Model Name: {model_name}")
-    typer.echo(f"Model Providers: {model_providers}")
-    typer.echo(f"Multi-Agent Mode: {enable_multi_agent}")
-    typer.echo(f"Subagents: {selected_subagents}")
-    typer.echo(f"Tools: {selected_tools}")
-    typer.echo(f"Allow Fallbacks: {allow_fallbacks}")
+    if is_sub_agent:
+        number_of_sub_agents = 0
+    else:
+        number_of_sub_agents = int(
+            questionary.text(
+                "Number of sub agents: ",
+                validate=lambda text: text.isdigit() or "Please enter a valid number"
+            ).ask()
+        )
+    sub_agents_names = []
+    if number_of_sub_agents > 0:
+        for i in range(int(number_of_sub_agents)):
+            subagent_config = agent_config(f"{agent_name}'s sub-agent-{i}", is_sub_agent=True)
+            sub_agents_names.append(subagent_config.agent_name)
+            save_config(subagent_config)
+
     # Create Config and Prompts files pahts
     target_prompts_dir = Path("prompts")
     target_config_dir = Path("configs")
@@ -178,19 +138,53 @@ def configure():
     config = AgentConfig(
         model_name=model_name,
         agent_name=agent_name,
+        agent_instruction=agent_instruction,
         instructions_path=instructions_path,
+        config_file_path=config_path,
         settings_openrouter_provider_list=model_providers,
-        subagents_list=selected_subagents,
+        allow_fallbacks=allow_fallbacks,
+        subagents_list=sub_agents_names,
         tools_list=selected_tools
     )
+    return config
+
+def save_config(config: AgentConfig) -> None:
     save_agent_config(
-        config_file=config_path,
+        config_file=config.config_file_path,
         config_data=config
     )
     save_prompt_instruction(
-        path=instructions_path,
-        instruction_data=f"You are {agent_name}, built with icogito-cli & icogito_lib"
+        path=config.instructions_path,
+        instruction_data=config.agent_instruction
     )
+
+@app.command()
+def configure():
+    """
+    Interactively configure agent workflows with questionary prompts.
+    """
+    typer.echo("--- Dynamic Agent Configuration ---")
+    # Boolean toggle using questionary.confirm
+    enable_multi_agent = questionary.select(
+        "Enable multi-agent configuration?",
+        choices=[
+            "Yes",
+            "No"
+        ],
+    ).ask()
+    if enable_multi_agent == "No":
+        config = agent_config("root-agent")
+        save_config(config)
+    else:
+        number_of_agents = int(
+            questionary.text(
+                "Number of root agents: ",
+                validate=lambda text: text.isdigit() or "Please enter a valid number"
+            ).ask()
+        )
+        for i in range(int(number_of_agents)):
+            config = agent_config(f"root-agent-{i}")
+            save_config(config)
     typer.echo("AgentConfig initialized successfully!")
 
 if __name__ == "__main__":

@@ -13,11 +13,13 @@ class AgentConfig(BaseModel):
     model_name: str
     agent_name: str
     instructions_path: str
+    config_file_path: str
+    agent_instruction: str
+    allow_fallbacks: bool
     settings_openrouter_provider_list: list[str] # TODO: Add to accept None as value
     sub_instructions_path: str | None = None
     sub_descriptions_path: str | None = None
     sub_agent_description: str | None = None
-    agent_instruction: str | None = None
     subagents_list: list[str] | None = None
     tools_list: list[str] | None = None
     output_schema: Type[BaseModel] | None = None

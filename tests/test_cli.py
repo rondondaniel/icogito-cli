@@ -31,8 +31,11 @@ def test_init_command(tmp_path: Path):
     result = runner.invoke(app, ["init", "--target-dir", str(target_dir)])
     assert result.exit_code == 0
     assert f"Initializing agent scaffolding at {target_dir}..." in result.stdout
-    assert (target_dir / "configs" / "example_agent_config.yaml").exists()
-    assert (target_dir / "prompts" / "example_instruction.md").exists()
+    assert (target_dir / "configs").exists()
+    assert (target_dir / "prompts").exists()
+    assert (target_dir / "agents").exists()
+    assert (target_dir / "schemas").exists()
+    assert (target_dir / "tools").exists()
 
 
 def test_configure_command_success(tmp_path: Path, monkeypatch, mocker):
@@ -47,8 +50,15 @@ def test_configure_command_success(tmp_path: Path, monkeypatch, mocker):
     mock_checkbox = mocker.patch("questionary.checkbox")
     mock_confirm = mocker.patch("questionary.confirm")
 
-    mock_text.return_value.ask.return_value = agent_name
-    mock_select.return_value.ask.return_value = "openai/gpt-4o"
+    mock_text.return_value.ask.return_value = [
+        "2",
+        agent_name,
+        "I'm a nice agent"
+    ]
+    mock_select.return_value.ask.return_value = [
+        "Yes",
+        "openai/gpt-4o"
+    ]
     mock_checkbox.return_value.ask.side_effect = [
         ["OpenAI"],  # OpenRouter Providers
         ["web_researcher"],  # Subagents
