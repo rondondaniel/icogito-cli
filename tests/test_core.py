@@ -16,9 +16,8 @@ from icogito.schemas.agents import AgentConfig
 
 def test_create_scaffolding(tmp_path: Path):
     target_dir = tmp_path / "my_agent_project"
-    created_paths = create_scaffolding(target_dir)
+    create_scaffolding(target_dir)
 
-    assert target_dir in created_paths
     assert target_dir.exists()
     assert target_dir.is_dir()
 
@@ -27,7 +26,6 @@ def test_create_scaffolding(tmp_path: Path):
         sub_path = target_dir / subdir
         assert sub_path.exists()
         assert sub_path.is_dir()
-        assert sub_path in created_paths
 
 
 def test_get_doctor_status_default():

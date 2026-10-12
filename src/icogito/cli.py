@@ -13,23 +13,30 @@ app = typer.Typer(
 )
 
 
+def get_app_dir() -> Path:
+    """Returns OS-standard global application directory for icogito CLI persistent data."""
+    app_dir = Path(typer.get_app_dir("icogito"))
+    app_dir.mkdir(parents=True, exist_ok=True)
+    return app_dir
+
+
 @app.command()
 def init(
-    target_dir: Path = typer.Option(
-        Path("src/my_new_agent"),
-        "--target-dir",
-        "-t",
-        help="Target destination directory for scaffolding.",
+    target_dir: Optional[Path] = typer.Argument(
+        default=None,
+        help="Target directory for the new project",
     ),
     force: bool = typer.Option(False, "--force", "-f", help="Force re-initialization"),
 ):
     """
     Initialize directory scaffolding and example agent configuration.
     """
-    typer.echo(f"Initializing agent scaffolding at {target_dir}...")
-    core.create_scaffolding(target_dir)
-    typer.echo(
-        f"Successfully generated directory structure and configs/example_agent_config.yaml at {target_dir}."
+    resolved_target_dir = target_dir or Path.cwd()
+    typer.secho(f"Initializing agent scaffolding at {resolved_target_dir}...", fg=typer.colors.GREEN)
+    core.create_scaffolding(resolved_target_dir)
+    typer.secho(
+        f"Successfully generated directory structure at {resolved_target_dir}.",
+        fg=typer.colors.GREEN,
     )
 
 

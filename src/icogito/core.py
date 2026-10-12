@@ -8,19 +8,13 @@ from icogito.utils.save_agent_config import save_agent_config
 from icogito.utils.save_prompt_instruction import save_prompt_instruction
 
 
-def create_scaffolding(target_dir: Path) -> List[Path]:
-    """Creates directory structure for agent scaffolding."""
+def create_scaffolding(target_dir: Path) -> None:
+    """Creates directory structure and YAML config file."""
     subdirs = ["agents", "configs", "schemas", "prompts", "tools", "utils"]
-
     target_dir.mkdir(parents=True, exist_ok=True)
-    created_paths = [target_dir]
 
     for subdir in subdirs:
-        dir_path = target_dir / subdir
-        dir_path.mkdir(parents=True, exist_ok=True)
-        created_paths.append(dir_path)
-
-    return created_paths
+        (target_dir / subdir).mkdir(parents=True, exist_ok=True)
 
 
 def get_doctor_status(verbose: bool = False) -> Dict[str, Any]:

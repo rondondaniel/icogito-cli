@@ -6,9 +6,19 @@ from typer.testing import CliRunner
 # Ensure TAVILY_API_KEY is set in environment so imports in cli.py don't fail
 os.environ["TAVILY_API_KEY"] = "dummy-test-key"
 
-from icogito.cli import app, prompt_agent_config
+from unittest.mock import patch
+from icogito.cli import app, get_app_dir, prompt_agent_config
 
 runner = CliRunner()
+
+
+def test_global_app_dir(tmp_path: Path):
+    fake_app_dir = tmp_path / "global_icogito_config"
+    with patch("typer.get_app_dir", return_value=str(fake_app_dir)) as mock_get_app_dir:
+        app_dir = get_app_dir()
+        mock_get_app_dir.assert_called_once_with("icogito")
+        assert app_dir == fake_app_dir
+        assert app_dir.exists()
 
 
 def test_doctor_command():
@@ -26,9 +36,22 @@ def test_doctor_command_verbose():
     assert "Detailed logs: All services reporting nominal operations." in result.stdout
 
 
-def test_init_command(tmp_path: Path):
+def test_init_command_default_cwd(tmp_path: Path, monkeypatch):
+    monkeypatch.chdir(tmp_path)
+    result = runner.invoke(app, ["init"])
+    assert result.exit_code == 0
+    assert f"Initializing agent scaffolding at {tmp_path}..." in result.stdout
+    assert (tmp_path / "configs").exists()
+    assert (tmp_path / "prompts").exists()
+    assert (tmp_path / "agents").exists()
+    assert (tmp_path / "schemas").exists()
+    assert (tmp_path / "tools").exists()
+    assert (tmp_path / "utils").exists()
+
+
+def test_init_command_with_target_dir(tmp_path: Path):
     target_dir = tmp_path / "scaffold_test"
-    result = runner.invoke(app, ["init", "--target-dir", str(target_dir)])
+    result = runner.invoke(app, ["init", str(target_dir)])
     assert result.exit_code == 0
     assert f"Initializing agent scaffolding at {target_dir}..." in result.stdout
     assert (target_dir / "configs").exists()
@@ -36,13 +59,7 @@ def test_init_command(tmp_path: Path):
     assert (target_dir / "agents").exists()
     assert (target_dir / "schemas").exists()
     assert (target_dir / "tools").exists()
-
-
-def test_init_command_short_option(tmp_path: Path):
-    target_dir = tmp_path / "scaffold_test_short"
-    result = runner.invoke(app, ["init", "-t", str(target_dir)])
-    assert result.exit_code == 0
-    assert (target_dir / "configs").exists()
+    assert (target_dir / "utils").exists()
 
 
 def _mock_questionary(mocker, text, select, checkbox, confirm):
