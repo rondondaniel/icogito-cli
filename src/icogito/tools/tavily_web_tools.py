@@ -1,6 +1,6 @@
 from tavily import AsyncTavilyClient
 from pydantic_ai import ModelRetry, RunContext
-from icogito_lib.schemas.agents import ResearchState
+from icogito.schemas.agents import ResearchState
 from dotenv import load_dotenv
 from loguru import logger
 from typing import Any, Literal
@@ -8,12 +8,14 @@ import os
 
 load_dotenv()
 
-TAVILY_API_KEY = os.getenv("TAVILY_API_KEY")
-if not TAVILY_API_KEY:
-    logger.error("TAVILY_API_KEY is missing!")
-    raise ValueError("TAVILY_API_KEY is missing! Check your .env file.")
 
-tavily_client = AsyncTavilyClient(api_key=TAVILY_API_KEY)
+def get_tavily_client() -> AsyncTavilyClient:
+    api_key = os.getenv("TAVILY_API_KEY")
+    if not api_key:
+        logger.error("TAVILY_API_KEY is missing!")
+        raise ValueError("TAVILY_API_KEY is missing! Check your .env file.")
+    return AsyncTavilyClient(api_key=api_key)
+
 
 BLOCKED_MESSAGE = (
     "This URL is blocked by a paywall or anti-bot system. DO NOT retry "
@@ -28,6 +30,7 @@ async def web_search(
 ) -> dict:
     """Performs a web search specifically for recent news using Tavily"""
     logger.info(f"Web search looking for {search}")
+    tavily_client = get_tavily_client()
     search_response = await tavily_client.search(
         query=search,
         topic=topic,
@@ -46,6 +49,7 @@ async def web_fetch(ctx: RunContext[ResearchState], urls: str | list[str]) -> di
             return {"error": "URL already processed. Stop fetching this URL and synthesize."}
         ctx.deps.visited_urls.add(url)
     logger.info(f"Extracting from {urls}")
+    tavily_client = get_tavily_client()
     response = await tavily_client.extract(
         urls=urls,
         extract_depth="advanced",
@@ -60,6 +64,7 @@ async def web_fetch(ctx: RunContext[ResearchState], urls: str | list[str]) -> di
 async def web_crawl(url: str, instructions: str) -> dict[str, Any]:
     """Performs a smart web crawling using Tavily"""
     logger.info(f"Crawling: {url}")
+    tavily_client = get_tavily_client()
     response = await tavily_client.crawl(url, instructions=instructions)
     if not response:
         logger.warning("Tavily found nothing or got blocked")

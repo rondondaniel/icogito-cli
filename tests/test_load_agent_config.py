@@ -1,8 +1,8 @@
 import pytest
 from pydantic import ValidationError
 from pathlib import Path
-from icogito_lib.utils.load_agent_config import load_agent_config
-from icogito_lib.schemas.agents import AgentConfig
+from icogito.utils.load_agent_config import load_agent_config
+from icogito.schemas.agents import AgentConfig
 
 
 def test_load_agent_config_success(tmp_path: Path):

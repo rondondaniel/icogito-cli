@@ -6,7 +6,7 @@ from typer.testing import CliRunner
 # Ensure TAVILY_API_KEY is set in environment so imports in cli.py don't fail
 os.environ["TAVILY_API_KEY"] = "dummy-test-key"
 
-from icogito_cli.cli import app
+from icogito.cli import app
 
 runner = CliRunner()
 

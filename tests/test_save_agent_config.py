@@ -1,9 +1,9 @@
 import yaml
 from pathlib import Path
 
-from icogito_lib.utils.save_agent_config import save_agent_config
-from icogito_lib.schemas.agents import AgentConfig
-from icogito_lib.utils.load_agent_config import load_agent_config
+from icogito.utils.save_agent_config import save_agent_config
+from icogito.schemas.agents import AgentConfig
+from icogito.utils.load_agent_config import load_agent_config
 
 
 def _make_config(agent_name: str = "test_agent") -> AgentConfig:
