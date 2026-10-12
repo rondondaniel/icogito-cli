@@ -6,43 +6,66 @@ from typer.testing import CliRunner
 # Ensure TAVILY_API_KEY is set in environment so imports in cli.py don't fail
 os.environ["TAVILY_API_KEY"] = "dummy-test-key"
 
-from icogito.cli import app, prompt_agent_config
+from icogito.cli import app, prompt_agent_config, get_global_app_dir
 
 runner = CliRunner()
 
 
-def test_doctor_command():
+def test_get_global_app_dir(mocker, tmp_path: Path):
+    fake_global_dir = tmp_path / ".config" / "icogito"
+    mocker.patch("typer.get_app_dir", return_value=str(fake_global_dir))
+
+    global_dir = get_global_app_dir()
+    assert global_dir == fake_global_dir
+    assert fake_global_dir.exists()
+
+
+def test_doctor_command(mocker, tmp_path: Path):
+    fake_global_dir = tmp_path / ".config" / "icogito"
+    mocker.patch("typer.get_app_dir", return_value=str(fake_global_dir))
+
     result = runner.invoke(app, ["doctor"])
     assert result.exit_code == 0
     assert "System status: OK" in result.stdout
+    assert f"Global App Directory: {fake_global_dir}" in result.stdout
     assert "Available Tavily tools: web_search, web_fetch, web_crawl" in result.stdout
     assert "AgentFactory ready: AgentFactory" in result.stdout
 
 
-def test_doctor_command_verbose():
+def test_doctor_command_verbose(mocker, tmp_path: Path):
+    fake_global_dir = tmp_path / ".config" / "icogito"
+    mocker.patch("typer.get_app_dir", return_value=str(fake_global_dir))
+
     result = runner.invoke(app, ["doctor", "--verbose"])
     assert result.exit_code == 0
     assert "System status: OK" in result.stdout
     assert "Detailed logs: All services reporting nominal operations." in result.stdout
 
 
-def test_init_command(tmp_path: Path):
+def test_init_command_positional_arg(tmp_path: Path):
     target_dir = tmp_path / "scaffold_test"
-    result = runner.invoke(app, ["init", "--target-dir", str(target_dir)])
+    result = runner.invoke(app, ["init", str(target_dir)])
     assert result.exit_code == 0
     assert f"Initializing agent scaffolding at {target_dir}..." in result.stdout
+    assert f"Successfully generated directory structure at {target_dir}." in result.stdout
     assert (target_dir / "configs").exists()
     assert (target_dir / "prompts").exists()
     assert (target_dir / "agents").exists()
     assert (target_dir / "schemas").exists()
     assert (target_dir / "tools").exists()
+    assert (target_dir / "utils").exists()
 
 
-def test_init_command_short_option(tmp_path: Path):
-    target_dir = tmp_path / "scaffold_test_short"
-    result = runner.invoke(app, ["init", "-t", str(target_dir)])
+def test_init_command_default_cwd(tmp_path: Path, monkeypatch):
+    monkeypatch.chdir(tmp_path)
+    result = runner.invoke(app, ["init", "."])
     assert result.exit_code == 0
-    assert (target_dir / "configs").exists()
+    assert (tmp_path / "configs").exists()
+    assert (tmp_path / "agents").exists()
+    assert (tmp_path / "schemas").exists()
+    assert (tmp_path / "prompts").exists()
+    assert (tmp_path / "tools").exists()
+    assert (tmp_path / "utils").exists()
 
 
 def _mock_questionary(mocker, text, select, checkbox, confirm):
