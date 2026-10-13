@@ -1,5 +1,5 @@
 import yaml
-from icogito.schemas.agents import AgentConfig
+from icogito.models import AgentConfig
 
 def load_agent_config(yaml_path: str) -> AgentConfig:
     """Loads a single YAML file and converts it into an AgentConfig model."""
