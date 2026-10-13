@@ -8,7 +8,7 @@ from pydantic_ai.output import ToolOutput
 from pydantic_ai.toolsets.function import FunctionToolset
 from icogito.utils.get_prompt_instruction import get_prompt_instruction
 from icogito.tools.tavily_web_tools import web_fetch, web_search
-from icogito.schemas.agents import AgentConfig
+from icogito.models import AgentConfig
 from typing import Callable, Any
 from loguru import logger
 

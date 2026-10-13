@@ -1,6 +1,6 @@
 from tavily import AsyncTavilyClient
 from pydantic_ai import ModelRetry, RunContext
-from icogito.schemas.agents import ResearchState
+from icogito.models import ResearchState
 from dotenv import load_dotenv
 from loguru import logger
 from typing import Any, Literal

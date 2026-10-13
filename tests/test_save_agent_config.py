@@ -1,8 +1,8 @@
 import yaml
 from pathlib import Path
 
+from icogito.models import AgentConfig
 from icogito.utils.save_agent_config import save_agent_config
-from icogito.schemas.agents import AgentConfig
 from icogito.utils.load_agent_config import load_agent_config
 
 

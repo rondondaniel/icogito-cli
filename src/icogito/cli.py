@@ -4,7 +4,7 @@ import typer
 import questionary
 
 from icogito import core
-from icogito.schemas.agents import AgentConfig
+from icogito.models import AgentConfig
 
 APP_NAME = "icogito"
 

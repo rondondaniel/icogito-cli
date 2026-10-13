@@ -2,7 +2,7 @@ import pytest
 from pydantic import ValidationError
 from pathlib import Path
 from icogito.utils.load_agent_config import load_agent_config
-from icogito.schemas.agents import AgentConfig
+from icogito.models import AgentConfig
 
 
 def test_load_agent_config_success(tmp_path: Path):

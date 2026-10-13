@@ -11,7 +11,7 @@ from icogito.core import (
     create_agent_config,
     save_config,
 )
-from icogito.schemas.agents import AgentConfig
+from icogito.models import AgentConfig
 
 
 def test_create_scaffolding(tmp_path: Path):

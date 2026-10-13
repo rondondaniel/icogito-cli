@@ -1,9 +1,9 @@
 from pathlib import Path
 from typing import Optional, List, Dict, Any
 
-from icogito.agents.factory import AgentFactory
+from icogito.factory import AgentFactory
 from icogito.tools.tavily_web_tools import web_search, web_fetch, web_crawl
-from icogito.schemas.agents import AgentConfig
+from icogito.models import AgentConfig
 from icogito.utils.save_agent_config import save_agent_config
 from icogito.utils.save_prompt_instruction import save_prompt_instruction
 
