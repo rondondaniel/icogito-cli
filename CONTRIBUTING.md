@@ -1,12 +1,12 @@
-# Contributing to icogito-cli
+# Contributing to icogito
 
-Thank you for your interest in contributing to `icogito-cli`! This document provides guidelines and instructions for setting up your development environment, following our `uv`-based packaging workflow, and submitting pull requests.
+Thank you for your interest in contributing to `icogito`! This document provides guidelines and instructions for setting up your development environment, following our `uv`-based packaging workflow, and submitting pull requests.
 
 ---
 
 ## Prerequisites
 
-- **Python 3.12+**: `icogito-cli` requires Python 3.12 or newer.
+- **Python 3.12+**: `icogito` requires Python 3.12 or newer.
 - **uv**: We use [`uv`](https://github.com/astral-sh/uv) for fast, deterministic dependency management and virtual environment execution.
 
 ---
@@ -20,8 +20,8 @@ Install `uv` if you haven't already (refer to [astral-sh/uv installation docs](h
 Clone the repository and install all dependencies (including test dependencies) into the local virtual environment (`.venv`):
 
 ```bash
-git clone https://github.com/your-org/icogito-cli.git
-cd icogito-cli
+git clone https://github.com/your-org/icogito.git
+cd icogito
 
 # Sync base dependencies and test dependencies into .venv
 uv sync --extra test
@@ -32,21 +32,21 @@ uv sync --extra test
 You can execute the CLI entrypoint directly with `uv run`:
 
 ```bash
-uv run icogito-cli --help
+uv run icogito --help
 ```
 
 Alternatively, invoke via Python module:
 
 ```bash
-uv run python -m icogito_cli.cli --help
+uv run python -m icogito.cli --help
 ```
 
 ### 3. Running Tests
 
-We use `pytest` for testing. Ensure test dependencies are synced (`uv sync --extra test`), then run pytest with `PYTHONPATH=src`:
+We use `pytest` for testing. Ensure test dependencies are synced (`uv sync --extra test`), then run pytest:
 
 ```bash
-PYTHONPATH=src uv run pytest
+uv run --extra test pytest
 ```
 
 ---
@@ -54,18 +54,24 @@ PYTHONPATH=src uv run pytest
 ## Repository Structure Overview
 
 ```
-icogito-cli/
+icogito/
 ├── src/
-│   ├── icogito_cli/    # Typer CLI application shell and commands
-│   └── icogito_lib/    # Core agent framework (agents, schemas, tools, utils)
+│   └── icogito/        # Core agent framework and CLI commands
+│       ├── agents/     # Agent factory and creation logic
+│       ├── configs/    # Agent YAML configurations
+│       ├── prompts/    # Instruction prompt markdown templates
+│       ├── schemas/    # Pydantic schemas and models
+│       ├── tools/      # Tool integrations (e.g., Tavily web tools)
+│       ├── utils/      # Helper utilities (loading/saving configs, prompts)
+│       ├── cli.py      # Typer CLI application entrypoint and commands
+│       └── core.py     # Core workflow and business logic functions
 ├── tests/              # Test suite
 ├── .github/            # GitHub templates and workflows
 ├── pyproject.toml      # Project configuration and dependencies
 └── uv.lock             # Lockfile for reproducible builds
 ```
 
-- **`icogito_cli/`**: Contains CLI commands built with Typer.
-- **`icogito_lib/`**: Contains core Agent and Multi-Agent infrastructure (`pydantic-ai`, `pydantic-ai-harness`, Tavily integration, etc.). Note that modules within `icogito_lib` import submodules using `src/` as a base path, so set `PYTHONPATH=src` during test execution or local scripts if needed.
+- **`src/icogito/`**: Single package containing CLI commands built with Typer (`cli.py`), core operational logic (`core.py`), and framework infrastructure (`agents/`, `schemas/`, `tools/`, `utils/`, etc.).
 
 ---
 
@@ -88,7 +94,7 @@ Note: GitHub issues are synchronized with our internal Linear workspace for trac
    ```
 2. **Implement & Test**: Write clean code and add corresponding unit tests under `tests/`. Verify tests pass locally:
    ```bash
-   PYTHONPATH=src uv run pytest
+   uv run --extra test pytest
    ```
 3. **Commit & Push**: Keep commits atomic and descriptive.
 4. **Open Pull Request**: Fill out all sections of the Pull Request template.
