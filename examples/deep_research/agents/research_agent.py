@@ -1,8 +1,8 @@
 from loguru import logger
 import os
 from examples.deep_research.schemas.datamodel import TopicNewsBatch
-from icogito.agents.factory import AgentFactory
-from icogito.schemas.agents import AgentConfig, ResearchState
+from icogito.factory import AgentFactory
+from icogito.models import AgentConfig, ResearchState
 from icogito.utils.load_agent_config import load_agent_config
 
 OPENROUTER_API_KEY = os.getenv("OPENROUTER_API_KEY")
