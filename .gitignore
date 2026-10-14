@@ -19,3 +19,6 @@ skills-lock.json
 .agents/
 .mypy_cache/
 .vscode
+
+# graphify knowledge graph (generated; run `/graphify .` to rebuild)
+graphify-out/
