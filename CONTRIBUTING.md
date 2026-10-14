@@ -57,10 +57,8 @@ uv run --extra test pytest
 icogito/
 ├── src/
 │   └── icogito/        # Core agent framework and CLI commands
-│       ├── agents/     # Agent factory and creation logic
-│       ├── configs/    # Agent YAML configurations
-│       ├── prompts/    # Instruction prompt markdown templates
-│       ├── schemas/    # Pydantic schemas and models
+│       ├── factory.py  # AgentFactory: builds pydantic-ai agents from AgentConfig
+│       ├── models.py   # Pydantic models (AgentConfig, ResearchState, ...)
 │       ├── tools/      # Tool integrations (e.g., Tavily web tools)
 │       ├── utils/      # Helper utilities (loading/saving configs, prompts)
 │       ├── cli.py      # Typer CLI application entrypoint and commands
@@ -71,7 +69,7 @@ icogito/
 └── uv.lock             # Lockfile for reproducible builds
 ```
 
-- **`src/icogito/`**: Single package containing CLI commands built with Typer (`cli.py`), core operational logic (`core.py`), and framework infrastructure (`agents/`, `schemas/`, `tools/`, `utils/`, etc.).
+- **`src/icogito/`**: Single package containing CLI commands built with Typer (`cli.py`), core operational logic (`core.py`), and framework infrastructure (`factory.py`, `models.py`, `tools/`, `utils/`).
 
 ---
 
