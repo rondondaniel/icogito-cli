@@ -37,7 +37,7 @@ body:
     id: logs
     attributes:
       label: Logs / Stack Trace
-      description: Please paste any relevant logs or error output.
+      description: Please paste any relevant logs or error output. Redact API keys and tokens (e.g. OPENROUTER_API_KEY, TAVILY_API_KEY).
       render: shell
   - type: textarea
     id: environment

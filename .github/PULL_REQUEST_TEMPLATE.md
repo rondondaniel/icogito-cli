@@ -17,7 +17,7 @@ Fixes #(issue)
 Please describe the tests that you ran to verify your changes. Include instructions so we can reproduce.
 
 - [ ] Unit tests (`PYTHONPATH=src uv run pytest`)
-- [ ] Manual CLI testing (`uv run icogito-cli ...`)
+- [ ] Manual CLI testing (`uv run icogito ...`)
 
 ## Checklist
 
