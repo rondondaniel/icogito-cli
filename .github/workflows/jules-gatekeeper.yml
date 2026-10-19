@@ -1,0 +1,60 @@
+name: Google Jules Task Gatekeeper
+
+# Stops non-maintainers from triggering Google Jules (label or @jules mention)
+# on public issues, which would burn the Jules quota.
+
+on:
+  issues:
+    types: [opened, edited, labeled]
+  issue_comment: # zizmor: ignore[dangerous-triggers] no checkout, untrusted text only regex-matched
+    types: [created, edited]
+
+permissions: {}
+
+concurrency:
+  group: jules-gatekeeper-${{ github.event.issue.number }}
+  cancel-in-progress: false
+
+jobs:
+  verify-author:
+    runs-on: ubuntu-latest
+    permissions:
+      issues: write
+    steps:
+      - name: Enforce maintainer-only Jules triggers
+        uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
+        with:
+          script: |
+            const JULES_LABEL = 'jules';
+            const MENTION = /@jules\b/i;
+            const WRITE_ROLES = ['admin', 'maintain', 'write'];
+
+            const { issue, comment, sender } = context.payload;
+            if (sender.type === 'Bot') return;
+
+            const { owner, repo } = context.repo;
+            const issue_number = issue.number;
+            const labels = issue.labels.map((l) => l.name.toLowerCase());
+            const text = comment ? comment.body : `${issue.title}\n${issue.body ?? ''}`;
+            const triggered = labels.includes(JULES_LABEL) || MENTION.test(text);
+            if (!triggered) return;
+
+            // Trust boundary = whoever performed the action (label, edit, comment).
+            const { data } = await github.rest.repos.getCollaboratorPermissionLevel({
+              owner, repo, username: sender.login,
+            });
+            if (WRITE_ROLES.includes(data.permission)) return;
+
+            core.warning(`${sender.login} (${data.permission}) may not trigger Jules.`);
+
+            if (labels.includes(JULES_LABEL)) {
+              await github.rest.issues.removeLabel({ owner, repo, issue_number, name: JULES_LABEL });
+            }
+            if (comment && MENTION.test(comment.body)) {
+              await github.rest.issues.deleteComment({ owner, repo, comment_id: comment.id });
+            }
+            await github.rest.issues.createComment({
+              owner, repo, issue_number,
+              body: 'Jules tasks can only be triggered by repository maintainers. The trigger was removed.',
+            });
+            core.setFailed(`${sender.login} is not authorized to trigger Jules AI tasks.`);
