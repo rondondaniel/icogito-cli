@@ -1,0 +1,38 @@
+name: Pull Request Guardrails
+
+on:
+  pull_request:
+    branches: [ main ]
+
+permissions:
+  contents: read
+
+jobs:
+  security-check:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@1c37ad07a6a961277cf70c0d37d6f313000f5884 # v10.3.0
+
+      - name: Audit workflows (zizmor)
+        run: |
+          set -euo pipefail
+          # Run zizmor but don't immediately fail the step; capture output
+          out=$(uvx zizmor --pedantic .github/workflows/ 2>&1) || true
+          echo "$out"
+          # Fail the job only if medium or high severity findings are present
+          if echo "$out" | grep -E -q '[0-9]+ medium|[0-9]+ high'; then
+            echo "Found medium/high findings — failing"
+            exit 1
+          fi
+          echo "Only low/informational findings — continuing"
+
+      - name: Audit dependencies (pip-audit)
+        run: |
+          uv export --frozen --no-hashes --no-emit-project -o requirements-audit.txt
+          uvx pip-audit --no-deps --disable-pip -r requirements-audit.txt
