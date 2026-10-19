@@ -20,11 +20,11 @@ class IdentifiedToolOutputLimits(ToolOutputLimits):
     A leaf toolset without an id breaks Prefect/Temporal durable execution.
     """
 
-    def get_toolset(self) -> AbstractToolset[Any] | None:
+    def get_toolset(self) -> AbstractToolset[Any] | Callable[..., Any] | None:
         toolset = super().get_toolset()
-        if toolset is not None and toolset.id is None:
+        if isinstance(toolset, AbstractToolset) and toolset.id is None:
             toolset._id = self.id  # type: ignore[attr-defined]
-        return toolset # type: ignore
+        return toolset
 
 
 class IdentifiedSubAgents(SubAgents):
@@ -34,11 +34,11 @@ class IdentifiedSubAgents(SubAgents):
     forwards `self.id` to the `SubAgentToolset` it builds.
     """
 
-    def get_toolset(self) -> AbstractToolset[Any] | None:
+    def get_toolset(self) -> AbstractToolset[Any] | Callable[..., Any] | None:
         toolset = super().get_toolset()
-        if toolset is not None and toolset.id is None:
+        if isinstance(toolset, AbstractToolset) and toolset.id is None:
             toolset._id = self.id  # type: ignore[attr-defined]
-        return toolset # type: ignore
+        return toolset
 
 
 class AgentFactory:
@@ -118,7 +118,7 @@ class AgentFactory:
             ]
 
         # 7. Unpack kwargs into the Agent
-        return Agent(**agent_kwargs) # type: ignore[call-overload]
+        return Agent(**agent_kwargs) # type: ignore[call-overload, no-any-return]
 
     def _get_tools_pool(self, tools_list: list[str]) -> list[Callable]:
         """Maps list of string names to actual tool functions."""
