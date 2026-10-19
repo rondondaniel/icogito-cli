@@ -1,7 +1,7 @@
 from pydantic_ai import Agent
 from pydantic_ai_harness import SubAgent, SubAgents, ToolOutputLimits
 from pydantic_ai.toolsets.abstract import AbstractToolset
-from pydantic_ai.durable_exec.prefect import PrefectDurability, TaskConfig
+# from pydantic_ai.durable_exec.prefect import PrefectDurability, TaskConfig
 from pydantic_ai.models.openrouter import OpenRouterModel, OpenRouterModelSettings
 from pydantic_ai.providers.openrouter import OpenRouterProvider
 from pydantic_ai.output import ToolOutput
@@ -89,14 +89,14 @@ class AgentFactory:
         # 5. Conditionally add Capabilities (Subagents)
         capabilities: list[Any] = [
             IdentifiedToolOutputLimits(id=f"{config.agent_name}_tool_output_limits"),
-            PrefectDurability(
-                model_task_config=TaskConfig(
-                    retries=3,
-                    retry_delay_seconds=[1.0, 2.0, 5.0],  # Exponential backoff
-                    timeout_seconds=600.0,
-                    log_prints=True
-                )
-            ),
+            # PrefectDurability(
+            #     model_task_config=TaskConfig(
+            #         retries=3,
+            #         retry_delay_seconds=[1.0, 2.0, 5.0],  # Exponential backoff
+            #         timeout_seconds=600.0,
+            #         log_prints=True
+            #     )
+            # ),
         ]
         if config.subagents_list:
             subagents_pool = self._get_subagents_pool(config.subagents_list)
