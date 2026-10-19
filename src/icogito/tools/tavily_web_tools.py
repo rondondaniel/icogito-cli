@@ -3,7 +3,7 @@ from pydantic_ai import ModelRetry, RunContext
 from icogito.models import ResearchState
 from dotenv import load_dotenv
 from loguru import logger
-from typing import Any, Literal
+from typing import Any, Literal, cast
 import os
 
 load_dotenv()
@@ -40,7 +40,7 @@ async def web_search(
     if search_response is None:
         logger.warning("Tavily found nothing or got blocked")
         raise ModelRetry(BLOCKED_MESSAGE)
-    return search_response
+    return cast(dict[str, Any], search_response)
 
 async def web_fetch(ctx: RunContext[ResearchState], urls: str | list[str]) -> dict[str, Any]:
     """Performs a web fetch using Tavily"""
@@ -58,7 +58,7 @@ async def web_fetch(ctx: RunContext[ResearchState], urls: str | list[str]) -> di
     if not response or "cloudflare" in str(response).lower():
         logger.warning("Tavily found nothing or got blocked")
         raise ModelRetry(BLOCKED_MESSAGE)
-    return response
+    return cast(dict[str, Any], response)
 
 
 async def web_crawl(url: str, instructions: str) -> dict[str, Any]:
@@ -69,4 +69,4 @@ async def web_crawl(url: str, instructions: str) -> dict[str, Any]:
     if not response:
         logger.warning("Tavily found nothing or got blocked")
         raise ModelRetry(BLOCKED_MESSAGE)
-    return response
+    return cast(dict[str, Any], response)

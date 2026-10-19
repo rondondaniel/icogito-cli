@@ -11,15 +11,15 @@ Scaffold CLI (`src/icogito/cli.py`) includes `init` (directory scaffolding), `do
 ## Commands
 
 ```bash
-uv sync                  # install deps into .venv (per uv.lock)
-uv sync --extra test     # install deps + test extras into .venv
+uv sync                  # install deps + dev group (mypy, pytest) into .venv (per uv.lock)
 uv run icogito           # run the CLI entrypoint (icogito.cli:main)
 uv run python -m icogito.cli <command>  # alt invocation
 uv run icogito configure # interactive agent config (writes configs/ + prompts/ under cwd)
-uv run --extra test pytest  # run tests (pytest + pytest-mock, in tests/)
+uv run pytest            # run tests (pytest + pytest-mock, in tests/)
+uv run mypy              # type-check src/ and tests/ (config in pyproject.toml)
 ```
 
-Tests live in `tests/` (`test_cli.py` tests CLI commands and questionary flows using `CliRunner` and `monkeypatch`; `test_core.py` tests core logic; util tests cover load/save config and prompt helpers). `pythonpath = ["src"]` is configured in `pyproject.toml`. `TAVILY_API_KEY` must be set for Tavily web tools (tests mock or set dummy keys). No linter or type-checker configured in `pyproject.toml`.
+Tests live in `tests/` (`test_cli.py` tests CLI commands and questionary flows using `CliRunner` and `monkeypatch`; `test_core.py` tests core logic; util tests cover load/save config and prompt helpers). `pythonpath = ["src"]` is configured in `pyproject.toml`. `TAVILY_API_KEY` must be set for Tavily web tools (tests mock or set dummy keys). mypy is configured in `pyproject.toml` and gates CI and release; `src/icogito/py.typed` marks the package typed. No linter configured.
 
 ## Architecture
 

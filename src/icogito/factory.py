@@ -1,7 +1,7 @@
 from pydantic_ai import Agent
 from pydantic_ai_harness import SubAgent, SubAgents, ToolOutputLimits
 from pydantic_ai.toolsets.abstract import AbstractToolset
-from pydantic_ai.durable_exec.prefect import PrefectDurability, TaskConfig
+# from pydantic_ai.durable_exec.prefect import PrefectDurability, TaskConfig
 from pydantic_ai.models.openrouter import OpenRouterModel, OpenRouterModelSettings
 from pydantic_ai.providers.openrouter import OpenRouterProvider
 from pydantic_ai.output import ToolOutput
@@ -20,11 +20,11 @@ class IdentifiedToolOutputLimits(ToolOutputLimits):
     A leaf toolset without an id breaks Prefect/Temporal durable execution.
     """
 
-    def get_toolset(self) -> AbstractToolset[Any] | None:
+    def get_toolset(self) -> AbstractToolset[Any] | Callable[..., Any] | None:
         toolset = super().get_toolset()
-        if toolset is not None and toolset.id is None:
+        if isinstance(toolset, AbstractToolset) and toolset.id is None:
             toolset._id = self.id  # type: ignore[attr-defined]
-        return toolset # type: ignore
+        return toolset
 
 
 class IdentifiedSubAgents(SubAgents):
@@ -34,11 +34,11 @@ class IdentifiedSubAgents(SubAgents):
     forwards `self.id` to the `SubAgentToolset` it builds.
     """
 
-    def get_toolset(self) -> AbstractToolset[Any] | None:
+    def get_toolset(self) -> AbstractToolset[Any] | Callable[..., Any] | None:
         toolset = super().get_toolset()
-        if toolset is not None and toolset.id is None:
+        if isinstance(toolset, AbstractToolset) and toolset.id is None:
             toolset._id = self.id  # type: ignore[attr-defined]
-        return toolset # type: ignore
+        return toolset
 
 
 class AgentFactory:
@@ -89,14 +89,14 @@ class AgentFactory:
         # 5. Conditionally add Capabilities (Subagents)
         capabilities: list[Any] = [
             IdentifiedToolOutputLimits(id=f"{config.agent_name}_tool_output_limits"),
-            PrefectDurability(
-                model_task_config=TaskConfig(
-                    retries=3,
-                    retry_delay_seconds=[1.0, 2.0, 5.0],  # Exponential backoff
-                    timeout_seconds=600.0,
-                    log_prints=True
-                )
-            ),
+            # PrefectDurability(
+            #     model_task_config=TaskConfig(
+            #         retries=3,
+            #         retry_delay_seconds=[1.0, 2.0, 5.0],  # Exponential backoff
+            #         timeout_seconds=600.0,
+            #         log_prints=True
+            #     )
+            # ),
         ]
         if config.subagents_list:
             subagents_pool = self._get_subagents_pool(config.subagents_list)
@@ -118,7 +118,7 @@ class AgentFactory:
             ]
 
         # 7. Unpack kwargs into the Agent
-        return Agent(**agent_kwargs) # type: ignore[call-overload]
+        return Agent(**agent_kwargs) # type: ignore[call-overload, no-any-return]
 
     def _get_tools_pool(self, tools_list: list[str]) -> list[Callable]:
         """Maps list of string names to actual tool functions."""
