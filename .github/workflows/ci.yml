@@ -9,8 +9,17 @@ on:
 permissions:
   contents: read
 
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: ${{ github.ref != 'refs/heads/main' }}
+
 jobs:
   test:
+    if: >-
+      github.event_name == 'pull_request' ||
+      (github.event_name == 'push' &&
+       !startsWith(github.event.head_commit.message, 'Merge pull request') &&
+       !contains(github.event.head_commit.message, '(#'))
     runs-on: ubuntu-latest
     steps:
       - name: Check out repository
@@ -25,6 +34,9 @@ jobs:
 
       - name: Install uv
         uses: astral-sh/setup-uv@1c37ad07a6a961277cf70c0d37d6f313000f5884 # v10.3.0
+        with:
+          enable-cache: true
+          cache-dependency-glob: "uv.lock"
 
       - name: Install dependencies
         run: uv sync
