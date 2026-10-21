@@ -1,8 +1,15 @@
 from pydantic_ai import Agent
 from pydantic_ai_harness import SubAgent, SubAgents, ToolOutputLimits
 from pydantic_ai.toolsets.abstract import AbstractToolset
-# from pydantic_ai.durable_exec.prefect import PrefectDurability, TaskConfig
 from pydantic_ai.models.openrouter import OpenRouterModel, OpenRouterModelSettings
+
+try:
+    from pydantic_ai.durable_exec.prefect import PrefectDurability, TaskConfig
+    HAS_PREFECT = True
+except ImportError:
+    PrefectDurability = None  # type: ignore[assignment, misc]
+    TaskConfig = None  # type: ignore[assignment, misc]
+    HAS_PREFECT = False
 from pydantic_ai.providers.openrouter import OpenRouterProvider
 from pydantic_ai.output import ToolOutput
 from pydantic_ai.toolsets.function import FunctionToolset
@@ -56,7 +63,7 @@ class AgentFactory:
     def create_subagent(self, config: AgentConfig) -> SubAgent:
         return SubAgent(self.create_agent(config=config))
     
-    def create_agent(self, config: AgentConfig) -> Agent:
+    def create_agent(self, config: AgentConfig, enable_prefect: bool = False) -> Agent:
         settings = OpenRouterModelSettings(
             openrouter_cache_instructions=True,
             openrouter_provider={
@@ -89,15 +96,23 @@ class AgentFactory:
         # 5. Conditionally add Capabilities (Subagents)
         capabilities: list[Any] = [
             IdentifiedToolOutputLimits(id=f"{config.agent_name}_tool_output_limits"),
-            # PrefectDurability(
-            #     model_task_config=TaskConfig(
-            #         retries=3,
-            #         retry_delay_seconds=[1.0, 2.0, 5.0],  # Exponential backoff
-            #         timeout_seconds=600.0,
-            #         log_prints=True
-            #     )
-            # ),
         ]
+        if enable_prefect:
+            if not HAS_PREFECT:
+                raise ImportError(
+                    "Prefect is required for durable execution. "
+                    "Please install it using: pip install \"icogito[prefect]\""
+                )
+            capabilities.append(
+                PrefectDurability(
+                    model_task_config=TaskConfig(
+                        retries=3,
+                        retry_delay_seconds=[1.0, 2.0, 5.0],  # Exponential backoff
+                        timeout_seconds=600.0,
+                        log_prints=True,
+                    )
+                )
+            )
         if config.subagents_list:
             subagents_pool = self._get_subagents_pool(config.subagents_list)
             if subagents_pool:

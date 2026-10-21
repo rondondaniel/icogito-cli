@@ -39,8 +39,11 @@ cd icogito
 # Sync project dependencies into .venv
 uv sync
 
-# (Optional) Sync test extra dependencies if developing or running tests
+# (Optional) Sync test or prefect extra dependencies if developing, running tests, or using Prefect
 uv sync --extra test
+uv sync --extra prefect
+# Or via pip:
+# pip install "icogito[prefect]"
 ```
 
 ### Local Environment Setup
@@ -108,6 +111,20 @@ uv run icogito configure
 ### Programmatic Usage
 
 `icogito` provides high-level utilities and `AgentFactory` for loading configs and instantiating runtime agents.
+
+#### Prefect Integration & Durable Execution
+
+Prefect is an optional dependency. When importing Prefect modules in your code or agents (e.g., `from prefect import flow, task`), always use a `try...except ImportError` block:
+
+```python
+try:
+    from prefect import flow, task
+    HAS_PREFECT = True
+except ImportError:
+    HAS_PREFECT = False
+```
+
+If you attempt to instantiate an agent with Prefect durability without `prefect` installed, `icogito` will instruct you to install the extra via `pip install "icogito[prefect]"`.
 
 #### Loading Configuration and Instantiating Agents
 
