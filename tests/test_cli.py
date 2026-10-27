@@ -6,7 +6,8 @@ from typer.testing import CliRunner
 # Ensure TAVILY_API_KEY is set in environment so imports in cli.py don't fail
 os.environ["TAVILY_API_KEY"] = "dummy-test-key"
 
-from icogito.cli import app, prompt_agent_config, get_global_app_dir
+import typer
+from icogito.cli import app, main, prompt_agent_config, get_global_app_dir
 
 runner = CliRunner()
 
@@ -166,3 +167,21 @@ def test_configure_command_multiple_root_agents(tmp_path: Path, monkeypatch, moc
     for name in ("root_a", "root_b"):
         assert (tmp_path / "configs" / f"{name}.yaml").exists()
         assert (tmp_path / "prompts" / f"{name}_instruction.md").exists()
+
+
+def test_main_keyboard_interrupt(mocker, capsys):
+    mocker.patch("icogito.cli.app", side_effect=KeyboardInterrupt)
+    with pytest.raises(typer.Exit) as exc_info:
+        main()
+    assert exc_info.value.exit_code == 0
+    captured = capsys.readouterr()
+    assert "Process canceled by user." in captured.out
+
+
+def test_main_typer_abort(mocker, capsys):
+    mocker.patch("icogito.cli.app", side_effect=typer.Abort)
+    with pytest.raises(typer.Exit) as exc_info:
+        main()
+    assert exc_info.value.exit_code == 0
+    captured = capsys.readouterr()
+    assert "Process canceled by user." in captured.out
