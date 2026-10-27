@@ -11,7 +11,6 @@ model_name: "openai/gpt-4o-mini"
 agent_name: "test_agent"
 instructions_path: "prompts/test.md"
 config_file_path: "configs/test_agent.yaml"
-agent_instruction: "You are a test agent."
 allow_fallbacks: false
 settings_openrouter_provider_list:
   - "openai"
@@ -31,7 +30,6 @@ max_concurrency: 2
     assert config.agent_name == "test_agent"
     assert config.instructions_path == "prompts/test.md"
     assert config.config_file_path == "configs/test_agent.yaml"
-    assert config.agent_instruction == "You are a test agent."
     assert config.allow_fallbacks is False
     assert config.settings_openrouter_provider_list == ["openai"]
     assert config.tools_list == ["web_search"]

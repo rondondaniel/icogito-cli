@@ -15,7 +15,7 @@ def test_agent_factory_create_agent(tmp_path: Path):
         model_name="openai/gpt-4o-mini",
         model_providers=["openai"],
         allow_fallbacks=False,
-        agent_instruction="You are a helpful assistant.",
+        instruction_text="You are a helpful assistant.",
         selected_tools=["web_search"],
         prompts_dir=prompts_dir,
         configs_dir=configs_dir,
@@ -28,6 +28,9 @@ def test_agent_factory_create_agent(tmp_path: Path):
     assert isinstance(agent, Agent)
     assert isinstance(agent.model, OpenRouterModel)
     assert agent.name == "test_agent"
+    # instructions must come from the on-disk prompt file via get_prompt_instruction
+    assert (prompts_dir / "test_agent_instruction.md").read_text() == "You are a helpful assistant."
+    assert "You are a helpful assistant." in str(agent._instructions)
 
 
 def test_agent_factory_prefect_missing(tmp_path: Path, monkeypatch: pytest.MonkeyPatch):
@@ -39,7 +42,7 @@ def test_agent_factory_prefect_missing(tmp_path: Path, monkeypatch: pytest.Monke
         model_name="openai/gpt-4o-mini",
         model_providers=["openai"],
         allow_fallbacks=False,
-        agent_instruction="You are a helpful assistant.",
+        instruction_text="You are a helpful assistant.",
         selected_tools=[],
         prompts_dir=prompts_dir,
         configs_dir=configs_dir,
@@ -65,7 +68,7 @@ def test_agent_factory_prefect_enabled(tmp_path: Path, monkeypatch: pytest.Monke
         model_name="openai/gpt-4o-mini",
         model_providers=["openai"],
         allow_fallbacks=False,
-        agent_instruction="You are a helpful assistant.",
+        instruction_text="You are a helpful assistant.",
         selected_tools=[],
         prompts_dir=prompts_dir,
         configs_dir=configs_dir,

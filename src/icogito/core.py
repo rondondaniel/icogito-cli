@@ -41,13 +41,13 @@ def create_agent_config(
     model_name: str,
     model_providers: List[str],
     allow_fallbacks: bool,
-    agent_instruction: str,
+    instruction_text: str,
     selected_tools: List[str],
     sub_agents_names: Optional[List[str]] = None,
     prompts_dir: Path | str = "prompts",
     configs_dir: Path | str = "configs",
 ) -> AgentConfig:
-    """Constructs an AgentConfig object with target prompt and config paths."""
+    """Constructs an AgentConfig and writes its instruction text to the prompt file."""
     target_prompts_dir = Path(prompts_dir)
     target_config_dir = Path(configs_dir)
     target_prompts_dir.mkdir(parents=True, exist_ok=True)
@@ -56,10 +56,11 @@ def create_agent_config(
     instructions_path = f"{target_prompts_dir}/{agent_name}_instruction.md"
     config_path = f"{target_config_dir}/{agent_name}.yaml"
 
+    save_prompt_instruction(path=instructions_path, instruction_data=instruction_text)
+
     return AgentConfig(
         model_name=model_name,
         agent_name=agent_name,
-        agent_instruction=agent_instruction,
         instructions_path=instructions_path,
         config_file_path=config_path,
         settings_openrouter_provider_list=model_providers,
@@ -70,12 +71,8 @@ def create_agent_config(
 
 
 def save_config(config: AgentConfig) -> None:
-    """Saves the agent configuration file and prompt instruction."""
+    """Saves the agent configuration file."""
     save_agent_config(
         config_file=config.config_file_path,
         config_data=config
-    )
-    save_prompt_instruction(
-        path=config.instructions_path,
-        instruction_data=config.agent_instruction
     )

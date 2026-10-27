@@ -122,7 +122,7 @@ def prompt_agent_config(agent: str, is_sub_agent: bool = False) -> AgentConfig:
         model_name=model_name,
         model_providers=model_providers,
         allow_fallbacks=allow_fallbacks,
-        agent_instruction=agent_instruction,
+        instruction_text=agent_instruction,
         selected_tools=selected_tools,
         sub_agents_names=sub_agents_names,
     )
