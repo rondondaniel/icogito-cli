@@ -2,6 +2,7 @@ from pathlib import Path
 from typing import Any, Optional
 import typer
 import questionary
+import sys
 
 from icogito import core
 from icogito.models import AgentConfig
@@ -190,8 +191,10 @@ def main():
     try:
         app(standalone_mode=False)
     except (KeyboardInterrupt, typer.Abort):
-        typer.echo("Process canceled by user.")
-        raise typer.Exit(code=0)
+        typer.secho("\nConfiguration aborted.", fg=typer.colors.RED, bold=True)
+        typer.secho("\nExiting iCogito setup now.", fg=typer.colors.YELLOW)
+        typer.secho("\nThe CLI session has been terminated.", fg=typer.colors.RED)
+        sys.exit(0)
 
 
 if __name__ == "__main__":
