@@ -1,6 +1,6 @@
 import pytest
 from pathlib import Path
-from icogito.utils.get_prompt_instruction import get_prompt_instruction, PROJECT_ROOT
+from icogito.utils.get_prompt_instruction import get_prompt_instruction
 from icogito.utils.save_prompt_instruction import save_prompt_instruction
 
 
@@ -21,17 +21,20 @@ def test_get_prompt_instruction_absolute_path(tmp_path: Path):
     assert result_str == content
 
 
-def test_get_prompt_instruction_relative_path(tmp_path: Path, monkeypatch):
-    # Test relative path resolving against PROJECT_ROOT
-    rel_file = PROJECT_ROOT / "test_prompt_rel.txt"
-    content = "Relative prompt content"
-    try:
-        rel_file.write_text(content, encoding="utf-8")
-        result = get_prompt_instruction("test_prompt_rel.txt")
-        assert result == content
-    finally:
-        if rel_file.exists():
-            rel_file.unlink()
+def test_get_prompt_instruction_relative_path_resolves_against_cwd(tmp_path: Path, monkeypatch):
+    # Regression (DEV-163): relative paths must resolve against the user's cwd,
+    # not the installed package location (site-packages).
+    monkeypatch.chdir(tmp_path)
+    (tmp_path / "prompts").mkdir()
+    (tmp_path / "prompts" / "agent.md").write_text("Relative prompt content", encoding="utf-8")
+
+    assert get_prompt_instruction("prompts/agent.md") == "Relative prompt content"
+
+
+def test_get_prompt_instruction_relative_path_missing_in_cwd(tmp_path: Path, monkeypatch):
+    monkeypatch.chdir(tmp_path)
+    with pytest.raises(FileNotFoundError):
+        get_prompt_instruction("prompts/missing.md")
 
 
 def test_get_prompt_instruction_reads_saved_prompt(tmp_path: Path):
