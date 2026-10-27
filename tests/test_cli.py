@@ -95,7 +95,7 @@ def test_prompt_agent_config_direct(mocker, tmp_path: Path, monkeypatch):
     assert config.model_name == "openai/gpt-4o-mini"
     assert config.settings_openrouter_provider_list == ["openai"]
     assert config.allow_fallbacks is True
-    assert config.agent_instruction == "Direct test instructions"
+    assert (tmp_path / config.instructions_path).read_text() == "Direct test instructions"
     assert config.tools_list == ["web_search"]
     assert config.subagents_list == []
 
@@ -116,7 +116,7 @@ def test_configure_command_single_agent(tmp_path: Path, monkeypatch, mocker):
     assert result.exit_code == 0
     assert "--- Dynamic Agent Configuration ---" in result.stdout
     assert "AgentConfig initialized successfully!" in result.stdout
-    assert (tmp_path / "configs" / f"{agent_name}_agent.yaml").exists()
+    assert (tmp_path / "configs" / f"{agent_name}.yaml").exists()
     prompt_file = tmp_path / "prompts" / f"{agent_name}_instruction.md"
     assert prompt_file.read_text() == "I'm a nice agent"
 
@@ -142,10 +142,10 @@ def test_configure_command_multi_agent_with_subagent(
     assert result.exit_code == 0
     assert "AgentConfig initialized successfully!" in result.stdout
     for name in ("root_agent", "sub_agent"):
-        assert (tmp_path / "configs" / f"{name}_agent.yaml").exists()
+        assert (tmp_path / "configs" / f"{name}.yaml").exists()
         assert (tmp_path / "prompts" / f"{name}_instruction.md").exists()
 
-    root_yaml = (tmp_path / "configs" / "root_agent_agent.yaml").read_text()
+    root_yaml = (tmp_path / "configs" / "root_agent.yaml").read_text()
     assert "sub_agent" in root_yaml
 
 
@@ -164,5 +164,5 @@ def test_configure_command_multiple_root_agents(tmp_path: Path, monkeypatch, moc
     result = runner.invoke(app, ["configure"])
     assert result.exit_code == 0
     for name in ("root_a", "root_b"):
-        assert (tmp_path / "configs" / f"{name}_agent.yaml").exists()
+        assert (tmp_path / "configs" / f"{name}.yaml").exists()
         assert (tmp_path / "prompts" / f"{name}_instruction.md").exists()

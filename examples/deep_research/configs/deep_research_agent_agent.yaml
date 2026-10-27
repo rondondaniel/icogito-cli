@@ -5,7 +5,6 @@ settings_openrouter_provider_list: []
 sub_instructions_path: null
 sub_descriptions_path: null
 sub_agent_description: null
-agent_instruction: null
 subagents_list: []
 tools_list:
 - web_search

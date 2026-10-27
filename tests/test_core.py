@@ -55,7 +55,7 @@ def test_create_agent_config(tmp_path: Path):
         model_name="openai/gpt-4o-mini",
         model_providers=["openai"],
         allow_fallbacks=True,
-        agent_instruction="Research topics thoroughly.",
+        instruction_text="Research topics thoroughly.",
         selected_tools=["web_search"],
         sub_agents_names=["sub_researcher"],
         prompts_dir=prompts_dir,
@@ -67,12 +67,12 @@ def test_create_agent_config(tmp_path: Path):
     assert config.model_name == "openai/gpt-4o-mini"
     assert config.settings_openrouter_provider_list == ["openai"]
     assert config.allow_fallbacks is True
-    assert config.agent_instruction == "Research topics thoroughly."
+    assert (prompts_dir / "researcher_instruction.md").read_text() == "Research topics thoroughly."
     assert config.tools_list == ["web_search"]
     assert config.subagents_list == ["sub_researcher"]
 
     assert config.instructions_path == f"{prompts_dir}/researcher_instruction.md"
-    assert config.config_file_path == f"{configs_dir}/researcher_agent.yaml"
+    assert config.config_file_path == f"{configs_dir}/researcher.yaml"
 
     assert prompts_dir.exists()
     assert configs_dir.exists()
@@ -86,7 +86,7 @@ def test_save_config(tmp_path: Path, monkeypatch):
         model_name="openai/gpt-4o-mini",
         model_providers=["openai"],
         allow_fallbacks=False,
-        agent_instruction="Write concise summaries.",
+        instruction_text="Write concise summaries.",
         selected_tools=["web_search"],
         prompts_dir="prompts",
         configs_dir="configs",
@@ -94,7 +94,7 @@ def test_save_config(tmp_path: Path, monkeypatch):
 
     save_config(config)
 
-    yaml_file = tmp_path / "configs" / "writer_agent.yaml"
+    yaml_file = tmp_path / "configs" / "writer.yaml"
     instruction_file = tmp_path / "prompts" / "writer_instruction.md"
 
     assert yaml_file.exists()

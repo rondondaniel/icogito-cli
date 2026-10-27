@@ -12,7 +12,6 @@ def _make_config(agent_name: str = "test_agent") -> AgentConfig:
         agent_name=agent_name,
         instructions_path=f"prompts/{agent_name}_instruction.md",
         config_file_path=f"configs/{agent_name}_agent.yaml",
-        agent_instruction="You are a test agent.",
         allow_fallbacks=False,
         settings_openrouter_provider_list=["openai"],
         tools_list=["web_search"],
@@ -38,7 +37,7 @@ def test_save_agent_config_absolute_path(tmp_path: Path):
     saved = yaml.safe_load(config_file.read_text())
     assert saved["agent_name"] == "test_agent"
     assert saved["config_file_path"] == "configs/test_agent_agent.yaml"
-    assert saved["agent_instruction"] == "You are a test agent."
+    assert "agent_instruction" not in saved
     assert saved["allow_fallbacks"] is False
 
 
