@@ -54,7 +54,7 @@ def create_agent_config(
     target_config_dir.mkdir(parents=True, exist_ok=True)
 
     instructions_path = f"{target_prompts_dir}/{agent_name}_instruction.md"
-    config_path = f"{target_config_dir}/{agent_name}_agent.yaml"
+    config_path = f"{target_config_dir}/{agent_name}.yaml"
 
     return AgentConfig(
         model_name=model_name,
