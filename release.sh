@@ -53,6 +53,24 @@ if ! git diff-index --quiet HEAD -- && [ "$FORCE" = false ]; then
     exit 1
 fi
 
+# releases must come from main, in sync with origin
+branch=$(git rev-parse --abbrev-ref HEAD)
+if [ "$branch" != "main" ]; then
+    echo "Error: releases must be cut from main (currently on '$branch')."
+    exit 1
+fi
+
+git fetch origin main --tags --quiet
+if [ "$(git rev-parse HEAD)" != "$(git rev-parse origin/main)" ]; then
+    echo "Error: local main is not in sync with origin/main. Run 'git pull --ff-only' first."
+    exit 1
+fi
+
+if ! command -v gh &> /dev/null; then
+    echo "Error: gh is not installed. Please install the GitHub CLI from https://cli.github.com/"
+    exit 1
+fi
+
 if ! command -v uv &> /dev/null; then
     echo "Error: uv is not installed. Please install uv from https://docs.astral.sh/uv/"
     exit 1
@@ -84,6 +102,9 @@ if [[ $REPLY =~ ^[Yy]$ ]]; then
     # push changes
     git push origin main
     git push origin "v$new_version"
+
+    # publish the GitHub release (triggers .github/workflows/release.yml -> PyPI)
+    gh release create "v$new_version" --title "v$new_version" --generate-notes
 else
     echo "Aborted."
     exit 1
