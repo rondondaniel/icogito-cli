@@ -1,18 +1,13 @@
 from pathlib import Path
-from typing import Optional
 
-# Get the project root directory (utils/ -> project_root)
-PROJECT_ROOT = Path(__file__).resolve().parent.parent
+from icogito.models import PathLike
 
-def get_prompt_instruction(path: Optional[str | Path]) -> Optional[str]:
+
+def get_prompt_instruction(path: PathLike | None) -> str | None:
+    """Reads an instruction/description markdown file. Relative paths resolve against the current working directory."""
     # If the YAML didn't provide a path (it's None or empty string), return None safely
     if not path:
         return None
-        
-    file_path = Path(path)
-    
-    # If a relative path was passed, resolve it against the project root
-    if not file_path.is_absolute():
-        file_path = PROJECT_ROOT / file_path
-        
-    return file_path.read_text(encoding="utf-8")
+
+    # Path.cwd() / absolute_path yields the absolute path unchanged
+    return (Path.cwd() / path).read_text(encoding="utf-8")

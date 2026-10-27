@@ -1,9 +1,8 @@
 import yaml
-from typing import Optional
 from pathlib import Path
-from icogito.models import AgentConfig
+from icogito.models import AgentConfig, PathLike
 
-def save_agent_config(config_file: Optional[str | Path], config_data: AgentConfig) -> Optional[str | Path] | None:
+def save_agent_config(config_file: PathLike | None, config_data: AgentConfig) -> Path | None:
     """Saves a single YAML file and converts it into an AgentConfig model."""
     # If the file didn't provide a path (it's None or empty string), return None safely
     if not config_file:

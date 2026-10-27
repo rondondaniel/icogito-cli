@@ -3,6 +3,9 @@ from typing import Optional
 from datetime import datetime, timezone
 from typing import Type, Any
 from dataclasses import dataclass, field
+from pathlib import Path
+
+PathLike = str | Path
 
 @dataclass
 class ResearchState:

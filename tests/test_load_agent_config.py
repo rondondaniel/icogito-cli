@@ -49,3 +49,16 @@ def test_load_agent_config_missing_required_fields(tmp_path: Path):
 
     with pytest.raises(ValidationError):
         load_agent_config(str(yaml_file))
+
+
+def test_load_agent_config_relative_path_resolves_against_cwd(tmp_path: Path, monkeypatch):
+    monkeypatch.chdir(tmp_path)
+    (tmp_path / "configs").mkdir()
+    (tmp_path / "configs" / "a.yaml").write_text(
+        'model_name: "m"\nagent_name: "a"\ninstructions_path: "p.md"\n'
+        'config_file_path: "configs/a.yaml"\nallow_fallbacks: false\n'
+        'settings_openrouter_provider_list: []\n',
+        encoding="utf-8",
+    )
+
+    assert load_agent_config("configs/a.yaml").agent_name == "a"

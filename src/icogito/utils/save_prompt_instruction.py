@@ -1,7 +1,8 @@
 from pathlib import Path
-from typing import Optional
 
-def save_prompt_instruction(path: Optional[str | Path], instruction_data: str) -> Optional[str | Path] | None:
+from icogito.models import PathLike
+
+def save_prompt_instruction(path: PathLike | None, instruction_data: str) -> Path | None:
     """Saves agent's instruction into a markdown file."""
     # If the file didn't provide a path (it's None or empty string), return None safely
     if not path:
