@@ -2,6 +2,7 @@ import os
 from pathlib import Path
 import pytest
 from typer.testing import CliRunner
+import sys
 
 # Ensure TAVILY_API_KEY is set in environment so imports in cli.py don't fail
 os.environ["TAVILY_API_KEY"] = "dummy-test-key"
@@ -171,11 +172,11 @@ def test_configure_command_multiple_root_agents(tmp_path: Path, monkeypatch, moc
 
 def test_main_keyboard_interrupt(mocker, capsys):
     mocker.patch("icogito.cli.app", side_effect=KeyboardInterrupt)
-    with pytest.raises(typer.Exit) as exc_info:
+    with pytest.raises(SystemExit) as exc_info:
         main()
-    assert exc_info.value.exit_code == 0
+    assert exc_info.value.code == 0
     captured = capsys.readouterr()
-    assert "Process canceled by user." in captured.out
+    assert "Configuration aborted." in captured.out
 
 
 def test_safe_ask_returns_answer(mocker):
@@ -201,17 +202,17 @@ def test_configure_command_cancellation(mocker):
 def test_main_cancellation_interactive(mocker, monkeypatch, capsys):
     monkeypatch.setattr("sys.argv", ["icogito", "configure"])
     mocker.patch("questionary.select").return_value.ask.return_value = None
-    with pytest.raises(typer.Exit) as exc_info:
+    with pytest.raises(SystemExit) as exc_info:
         main()
-    assert exc_info.value.exit_code == 0
+    assert exc_info.value.code == 0
     captured = capsys.readouterr()
-    assert "Process canceled by user." in captured.out
+    assert "Configuration aborted." in captured.out
 
 
 def test_main_typer_abort(mocker, capsys):
     mocker.patch("icogito.cli.app", side_effect=typer.Abort)
-    with pytest.raises(typer.Exit) as exc_info:
+    with pytest.raises(SystemExit) as exc_info:
         main()
-    assert exc_info.value.exit_code == 0
+    assert exc_info.value.code == 0
     captured = capsys.readouterr()
-    assert "Process canceled by user." in captured.out
+    assert "Configuration aborted." in captured.out
