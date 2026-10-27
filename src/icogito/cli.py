@@ -161,7 +161,11 @@ def configure():
 
 
 def main():
-    app()
+    try:
+        app()
+    except (KeyboardInterrupt, typer.Abort):
+        typer.echo("Process canceled by user.")
+        raise typer.Exit(code=0)
 
 
 if __name__ == "__main__":
