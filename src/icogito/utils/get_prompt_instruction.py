@@ -1,8 +1,9 @@
 from pathlib import Path
-from typing import Optional
+
+from icogito.models import PathLike
 
 
-def get_prompt_instruction(path: Optional[str | Path]) -> Optional[str]:
+def get_prompt_instruction(path: PathLike | None) -> str | None:
     """Reads an instruction/description markdown file. Relative paths resolve against the current working directory."""
     # If the YAML didn't provide a path (it's None or empty string), return None safely
     if not path:

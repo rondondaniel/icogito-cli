@@ -3,7 +3,7 @@ from typing import Optional, List, Dict, Any
 
 from icogito.factory import AgentFactory
 from icogito.tools.tavily_web_tools import web_search, web_fetch, web_crawl
-from icogito.models import AgentConfig
+from icogito.models import AgentConfig, PathLike
 from icogito.utils.save_agent_config import save_agent_config
 from icogito.utils.save_prompt_instruction import save_prompt_instruction
 
@@ -44,8 +44,8 @@ def create_agent_config(
     instruction_text: str,
     selected_tools: List[str],
     sub_agents_names: Optional[List[str]] = None,
-    prompts_dir: Path | str = "prompts",
-    configs_dir: Path | str = "configs",
+    prompts_dir: PathLike = "prompts",
+    configs_dir: PathLike = "configs",
 ) -> AgentConfig:
     """Constructs an AgentConfig and writes its instruction text to the prompt file."""
     target_prompts_dir = Path(prompts_dir)
