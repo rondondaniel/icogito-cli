@@ -7,7 +7,7 @@ from typer.testing import CliRunner
 os.environ["TAVILY_API_KEY"] = "dummy-test-key"
 
 import typer
-from icogito.cli import app, main, prompt_agent_config, get_global_app_dir
+from icogito.cli import app, main, prompt_agent_config, get_global_app_dir, safe_ask
 
 runner = CliRunner()
 
@@ -171,6 +171,36 @@ def test_configure_command_multiple_root_agents(tmp_path: Path, monkeypatch, moc
 
 def test_main_keyboard_interrupt(mocker, capsys):
     mocker.patch("icogito.cli.app", side_effect=KeyboardInterrupt)
+    with pytest.raises(typer.Exit) as exc_info:
+        main()
+    assert exc_info.value.exit_code == 0
+    captured = capsys.readouterr()
+    assert "Process canceled by user." in captured.out
+
+
+def test_safe_ask_returns_answer(mocker):
+    mock_question = mocker.MagicMock()
+    mock_question.ask.return_value = "user response"
+    assert safe_ask(mock_question) == "user response"
+
+
+def test_safe_ask_raises_abort_on_none(mocker):
+    mock_question = mocker.MagicMock()
+    mock_question.ask.return_value = None
+    with pytest.raises(typer.Abort):
+        safe_ask(mock_question)
+
+
+def test_configure_command_cancellation(mocker):
+    mocker.patch("questionary.select").return_value.ask.return_value = None
+    result = runner.invoke(app, ["configure"])
+    assert result.exit_code != 0
+    assert result.exit_code == 1
+
+
+def test_main_cancellation_interactive(mocker, monkeypatch, capsys):
+    monkeypatch.setattr("sys.argv", ["icogito", "configure"])
+    mocker.patch("questionary.select").return_value.ask.return_value = None
     with pytest.raises(typer.Exit) as exc_info:
         main()
     assert exc_info.value.exit_code == 0
