@@ -4,7 +4,7 @@ Guidance for coding agents (Jules, Codex, etc.) working in this repo. Mirrors CL
 
 ## Project
 
-`icogito` — Python CLI framework for building Agent/Multi-Agent systems on top of `pydantic-ai` + `pydantic-ai-harness`, with OpenRouter as model provider and Tavily for web search/fetch/crawl tools. Requires Python >=3.12, uses `uv` for packaging (`uv_build` backend).
+`icogito` — Python CLI framework for building Agent/Multi-Agent systems on top of `pydantic-ai` + `pydantic-ai-harness`, with OpenRouter as the model provider and Tavily for web search/fetch/crawl tools. Requires Python >=3.12, uses `uv` for packaging (`uv_build` backend).
 
 Scaffold CLI (`src/icogito/cli.py`) includes `init` (directory scaffolding), `doctor` (system status and tool check) and `configure` (interactive questionary flow that generates agent YAML configs + instruction prompts via `icogito.core`).
 
@@ -27,9 +27,9 @@ Single package `icogito` under `src/icogito/`, registered in `pyproject.toml` wi
 
 - **`cli.py`** — Typer CLI entrypoint (`main()`, `app`). Defines `init`, `doctor`, and `configure` commands. Interactive prompt workflows use `questionary` and delegate file and config operations to `icogito.core`.
 - **`core.py`** — Core operational functions bridging CLI commands and framework capabilities (`create_scaffolding`, `get_doctor_status`, `create_agent_config` writes the instruction prompt file, `save_config` writes the YAML).
-- **`factory.py`** — `AgentFactory.create_agent(config, enable_prefect=False)` builds a `pydantic_ai.Agent` from an `AgentConfig`: sets up the OpenRouter model/provider, wires instructions/description/output_type/deps_type, and attaches capabilities (`IdentifiedToolOutputLimits`, optional `PrefectDurability` for durable execution, and — if `config.subagents_list` is set — `IdentifiedSubAgents`). Prefect imports (`from pydantic_ai.durable_exec.prefect import PrefectDurability, TaskConfig` / `from prefect import flow, task`) must always be wrapped in `try...except ImportError` blocks with `HAS_PREFECT` check to ensure safe dynamic imports. Tools/subagents resolved from string names in `AgentConfig` via `tool_registry` / `subagent_configs` lookup maps; subagents built recursively via `create_subagent`.
+- **`factory.py`** — `AgentFactory.create_agent(config, enable_prefect=False)` builds a `pydantic_ai.Agent` from an `AgentConfig`: sets up the OpenRouter model/provider, wires instructions/description/output_type/deps_type, and attaches capabilities (`IdentifiedToolOutputLimits` configured with `LocalFileStore()` so agents spill tool outputs to host temp dir without requiring a run workspace, optional `PrefectDurability` for durable execution, and — if `config.subagents_list` is set — `IdentifiedSubAgents`). Prefect imports (`from pydantic_ai.durable_exec.prefect import PrefectDurability, TaskConfig` / `from prefect import flow, task`) must always be wrapped in `try...except ImportError` blocks with `HAS_PREFECT` check to ensure safe dynamic imports. Tools/subagents are resolved from string names in `AgentConfig` via `tool_registry` / `subagent_configs` lookup maps, and subagents are built recursively via `create_subagent`.
 - **`models.py`** — `AgentConfig` (pydantic model driving agent construction. Required: `model_name`, `agent_name`, `instructions_path`, `config_file_path`, `allow_fallbacks`, `settings_openrouter_provider_list`; optional: sub-agent instructions/description paths, tool/subagent name lists, output schema, deps type, retry/concurrency settings), `ResearchState` (dataclass tracking visited URLs / searched queries, passed as agent deps), and `UsageLimitErrorResponse` (structured usage-limit error).
-- **`tools/tavily_web_tools.py`** — `web_search`, `web_fetch`, `web_crawl` tool functions backed by `AsyncTavilyClient`. Requires `TAVILY_API_KEY` in environment; raises at import time if missing. Blocked/empty responses raise `ModelRetry` rather than returning error silently, so agent retries with fixed `BLOCKED_MESSAGE` instead of re-fetching same blocked URL.
+- **`tools/tavily_web_tools.py`** — `web_search`, `web_fetch`, `web_crawl` tool functions backed by `AsyncTavilyClient`. Requires `TAVILY_API_KEY` in the environment; raises at import time if missing. Blocked/empty responses raise `ModelRetry` rather than returning an error silently, so the agent will retry with a fixed `BLOCKED_MESSAGE` instead of re-fetching the same blocked URL.
 - **`utils/`** — modular helpers for loading/saving agent configurations and instruction prompts:
   - `load_agent_config.py` — loads YAML file into `AgentConfig`. Example configs in `examples/deep_research/configs/`.
   - `save_agent_config.py` / `save_prompt_instruction.py` — write `AgentConfig` YAML (`model_dump`) / instruction markdown.
@@ -37,7 +37,20 @@ Single package `icogito` under `src/icogito/`, registered in `pyproject.toml` wi
 
 ### Known upstream workarounds
 
-`IdentifiedToolOutputLimits` and `IdentifiedSubAgents` in `factory.py` both subclass a `pydantic-ai-harness` class solely to patch a bug: base `get_toolset()` implementations build leaf toolset but never stamp parent's `id` onto it, which breaks Prefect/Temporal durable execution (leaf toolset needs an id). Both overrides just call `super().get_toolset()` and set `._id` if missing. If upgrading `pydantic-ai-harness`, check whether this is still needed.
+`IdentifiedToolOutputLimits` and `IdentifiedSubAgents` in `factory.py` both subclass a `pydantic-ai-harness` class solely to patch a bug: the base `get_toolset()` implementations build a leaf toolset but never stamp the parent's `id` onto it, which breaks Prefect/Temporal durable execution (a leaf toolset needs an id). Both overrides just call `super().get_toolset()` and set `._id` if missing. If upgrading `pydantic-ai-harness`, check whether this is still needed.
+
+<!-- rtk-instructions v2 -->
+# Command output
+
+Command output here is condensed to save tokens, keeping every signal and
+dropping costly noise. Treat it as the complete result: run commands
+normally, and batch related commands into one call to avoid extra turns.
+Truncated results state their recovery path in their own output. Re-run a
+command as `rtk proxy <cmd>` only when its result is unusable: empty when
+output was clearly expected, contradicting its exit code, or garbled.
+<!-- /rtk-instructions -->
+
+> **Note:** Do NOT remove the RTK instructions section or the Graphify section below. Both are essential for token optimization and knowledge graph navigation.
 
 ## graphify
 
