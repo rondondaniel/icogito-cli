@@ -93,3 +93,25 @@ def test_agent_factory_prefect_enabled(tmp_path: Path, monkeypatch: pytest.Monke
     agent = factory.create_agent(config, enable_prefect=True)
     assert isinstance(agent, Agent)
     assert agent._root_capability is not None
+
+
+def test_agent_runs_without_workspace(tmp_path: Path):
+    """ToolOutputLimits must not require a run workspace (DEV-164)."""
+    from pydantic_ai.models.test import TestModel
+
+    config = create_agent_config(
+        agent_name="test_agent_run",
+        model_name="openai/gpt-4o-mini",
+        model_providers=["openai"],
+        allow_fallbacks=False,
+        instruction_text="You are a helpful assistant.",
+        selected_tools=[],
+        prompts_dir=tmp_path / "prompts",
+        configs_dir=tmp_path / "configs",
+    )
+    save_config(config)
+
+    agent = AgentFactory(openrouter_api_key="test-api-key").create_agent(config)
+    with agent.override(model=TestModel()):
+        result = agent.run_sync("hi")
+    assert result.output

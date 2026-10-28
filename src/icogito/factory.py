@@ -1,5 +1,6 @@
 from pydantic_ai import Agent
 from pydantic_ai_harness import SubAgent, SubAgents, ToolOutputLimits
+from pydantic_ai_harness.tool_output_limits import LocalFileStore
 from pydantic_ai.toolsets.abstract import AbstractToolset
 from pydantic_ai.models.openrouter import OpenRouterModel, OpenRouterModelSettings
 
@@ -95,7 +96,12 @@ class AgentFactory:
 
         # 5. Conditionally add Capabilities (Subagents)
         capabilities: list[Any] = [
-            IdentifiedToolOutputLimits(id=f"{config.agent_name}_tool_output_limits"),
+            IdentifiedToolOutputLimits(
+                id=f"{config.agent_name}_tool_output_limits",
+                # Spill to the host temp dir: no run workspace needed, so the
+                # library stays portable when installed in other projects.
+                store=LocalFileStore(),
+            ),
         ]
         if enable_prefect:
             if not HAS_PREFECT:
