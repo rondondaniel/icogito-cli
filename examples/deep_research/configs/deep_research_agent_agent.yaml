@@ -1,6 +1,8 @@
 model_name: openai/gpt-6-luna
 agent_name: deep_research_agent
-instructions_path: ../../examples/deep_research/prompts/example_instruction.md
+instructions_path: examples/deep_research/prompts/example_instruction.md
+config_file_path: examples/deep_research/configs/deep_research_agent_agent.yaml
+allow_fallbacks: false
 settings_openrouter_provider_list: []
 sub_instructions_path: null
 sub_descriptions_path: null
