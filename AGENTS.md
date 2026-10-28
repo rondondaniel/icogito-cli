@@ -39,6 +39,19 @@ Single package `icogito` under `src/icogito/`, registered in `pyproject.toml` wi
 
 `IdentifiedToolOutputLimits` and `IdentifiedSubAgents` in `factory.py` both subclass a `pydantic-ai-harness` class solely to patch a bug: the base `get_toolset()` implementations build a leaf toolset but never stamp the parent's `id` onto it, which breaks Prefect/Temporal durable execution (a leaf toolset needs an id). Both overrides just call `super().get_toolset()` and set `._id` if missing. If upgrading `pydantic-ai-harness`, check whether this is still needed.
 
+<!-- rtk-instructions v2 -->
+# Command output
+
+Command output here is condensed to save tokens, keeping every signal and
+dropping costly noise. Treat it as the complete result: run commands
+normally, and batch related commands into one call to avoid extra turns.
+Truncated results state their recovery path in their own output. Re-run a
+command as `rtk proxy <cmd>` only when its result is unusable: empty when
+output was clearly expected, contradicting its exit code, or garbled.
+<!-- /rtk-instructions -->
+
+> **Note:** Do NOT remove the RTK instructions section or the Graphify section below. Both are essential for token optimization and knowledge graph navigation.
+
 ## graphify
 
 This project has a knowledge graph at graphify-out/ with god nodes, community structure, and cross-file relationships.
