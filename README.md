@@ -11,7 +11,7 @@
 - **CLI-Driven Scaffolding**: Easily create standardized directory structures (`agents/`, `configs/`, `prompts/`, `schemas/`, `tools/`, `utils/`) using `icogito init`.
 - **Interactive Configuration**: Build single-agent and multi-agent workflow configurations interactively with `icogito configure`.
 - **System Diagnostics**: Verify tools, environment setup, and framework status with `icogito doctor`.
-- **Agent Factory**: Instantiates `pydantic-ai` Agents dynamically from YAML configurations (`AgentConfig`).
+- **Agent Factory**: Instantiates `pydantic-ai` Agents dynamically from YAML configurations (`AgentConfig`) with portable tool output limit spilling via `LocalFileStore` (no run workspace required).
 - **Durable Execution & Subagents**: Supports task durability via `PrefectDurability` and hierarchical multi-agent delegation via `SubAgents`.
 - **Built-in Web Tools**: Tavily web integration for search, fetch, and crawl capabilities with built-in retry handling.
 
@@ -127,6 +127,8 @@ except ImportError:
 If you attempt to instantiate an agent with Prefect durability without `prefect` installed, `icogito` will instruct you to install the extra via `pip install "icogito[prefect]"`.
 
 #### Loading Configuration and Instantiating Agents
+
+`AgentFactory` dynamically builds `pydantic-ai` `Agent` instances from `AgentConfig` models. Built-in capability limits (via `ToolOutputLimits`) use `LocalFileStore` to spill large tool outputs to the host temp directory automatically, ensuring agents run portably when `icogito` is installed as a library without requiring a `pydantic-ai` run workspace.
 
 ```python
 import os
